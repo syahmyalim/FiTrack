@@ -384,11 +384,11 @@ async function sheetPost(body){
 async function pushToSheet(){
   setSyncNote('Saving to cloud...','#378ADD');
   try{
-    await sheetPost({action:'save',sheet:'profiles',key:'sam',value:P.sam});
-    await sheetPost({action:'save',sheet:'profiles',key:'bella',value:P.bella});
-    await sheetPost({action:'save',sheet:'daily_logs',key:'all',value:L});
-    await sheetPost({action:'save',sheet:'weight_logs',key:'all',value:W});
-    await sheetPost({action:'save',sheet:'training_logs',key:'all',value:T});
+    await sheetPost({action:'save',sheet:'profile',key:'sam',value:P.sam});
+    await sheetPost({action:'save',sheet:'profile',key:'bella',value:P.bella});
+    await sheetPost({action:'save',sheet:'daily_log',key:'all',value:L});
+    await sheetPost({action:'save',sheet:'weight_log',key:'all',value:W});
+    await sheetPost({action:'save',sheet:'training_log',key:'all',value:T});
     await sheetPost({action:'save',sheet:'exercise_lib',key:'list',value:EL});
     const now=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
     setSyncNote('Saved at '+now,'#1D9E75');
@@ -399,10 +399,10 @@ async function pullFromSheet(){
   setSyncNote('Loading from cloud...','#378ADD');
   try{
     const [pd,ld,wd,td2,ed]=await Promise.all([
-      sheetPost({action:'load',sheet:'profiles'}),
-      sheetPost({action:'load',sheet:'daily_logs'}),
-      sheetPost({action:'load',sheet:'weight_logs'}),
-      sheetPost({action:'load',sheet:'training_logs'}),
+      sheetPost({action:'load',sheet:'profile'}),
+      sheetPost({action:'load',sheet:'daily_log'}),
+      sheetPost({action:'load',sheet:'weight_log'}),
+      sheetPost({action:'load',sheet:'training_log'}),
       sheetPost({action:'load',sheet:'exercise_lib'})
     ]);
     if(pd.status==='ok'){if(pd.data.sam)P.sam={...DEFP.sam,...pd.data.sam};if(pd.data.bella)P.bella={...DEFP.bella,...pd.data.bella};}
@@ -415,7 +415,7 @@ async function pullFromSheet(){
     localStorage.setItem('ft_wC',JSON.stringify(W));
     localStorage.setItem('ft_tC',JSON.stringify(T));
     localStorage.setItem('ft_eC',JSON.stringify(EL));
-    loadP(P[U]);calc();renderLog();renderWt();renderHome();buildDD();
+    loadP(P[U]);calc();scheduleNightlySync();renderLog();renderWt();renderHome();buildDD();
     const now=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
     setSyncNote('Loaded at '+now,'#1D9E75');
   }catch(e){setSyncNote('Load failed — check connection','#E24B4A');}
@@ -470,7 +470,7 @@ function calc(){
   let bfd,bfs;if(bfi&&!isNaN(+bfi)){bfd=(+bfi).toFixed(1);bfs='from smart scale';}else{const e=g==='male'?1.2*bmi+0.23*age-16.2:1.2*bmi+0.23*age-5.4;bfd=Math.max(3,e).toFixed(1);bfs='estimated';}
   document.getElementById('bfout-v').innerHTML=bfd+'<span class="sunit">%</span>';document.getElementById('bfsrc-v').textContent=bfs;
 }
-function saveProf(){saveP(U);localStorage.setItem('ft_pC',JSON.stringify(P));calc();const t=document.getElementById('toast');t.style.display='block';setTimeout(()=>t.style.display='none',2000);pushToSheet();}
+function saveProf(){saveP(U);localStorage.setItem('ft_pC',JSON.stringify(P));calc();const t=document.getElementById('toast');t.style.display='block';setTimeout(()=>t.style.display='none',2000);}
 function gLog(u,d){const k=(u||U)+'_'+(d||curDate);if(!L[k])L[k]={food:[],exercise:[]};return L[k];}
 function sLog(){localStorage.setItem('ft_lC',JSON.stringify(L));}
 function renderLog(){
@@ -482,10 +482,10 @@ function renderLog(){
   document.getElementById('food-list').innerHTML=log.food.length?log.food.map((f,i)=>'<div class="lentry"><div class="lname">'+f.name+'</div><div class="lright"><span>'+f.cal+' kcal</span><button class="ldel" onclick="delF('+i+')">x</button></div></div>').join(''):'<div class="empty">No food logged yet</div>';
   document.getElementById('ex-list').innerHTML=log.exercise.length?log.exercise.map((e,i)=>'<div class="lentry"><div><div class="lname">'+e.type+'</div><div class="lmeta">'+(e.note||'')+'</div></div><div class="lright"><span style="color:#1D9E75">-'+e.cal+' kcal</span><button class="ldel" onclick="delE('+i+')">x</button></div></div>').join(''):'<div class="empty">No exercise logged yet</div>';
 }
-function addFood(){const n=document.getElementById('fn').value.trim(),c=+document.getElementById('fc').value;if(!n||!c)return;gLog().food.push({name:n,cal:c});sLog();renderLog();document.getElementById('fn').value='';document.getElementById('fc').value='';pushToSheet();}
-function addEx(){const t=document.getElementById('et').value,c=+document.getElementById('ec').value,n=document.getElementById('en').value.trim();if(!c)return;gLog().exercise.push({type:t,cal:c,note:n});sLog();renderLog();document.getElementById('ec').value='';document.getElementById('en').value='';checkTrainNudge();pushToSheet();}
-function delF(i){gLog().food.splice(i,1);sLog();renderLog();pushToSheet();}
-function delE(i){gLog().exercise.splice(i,1);sLog();renderLog();pushToSheet();}
+function addFood(){const n=document.getElementById('fn').value.trim(),c=+document.getElementById('fc').value;if(!n||!c)return;gLog().food.push({name:n,cal:c});sLog();renderLog();document.getElementById('fn').value='';document.getElementById('fc').value='';}
+function addEx(){const t=document.getElementById('et').value,c=+document.getElementById('ec').value,n=document.getElementById('en').value.trim();if(!c)return;gLog().exercise.push({type:t,cal:c,note:n});sLog();renderLog();document.getElementById('ec').value='';document.getElementById('en').value='';checkTrainNudge();}
+function delF(i){gLog().food.splice(i,1);sLog();renderLog();}
+function delE(i){gLog().exercise.splice(i,1);sLog();renderLog();}
 function sWlog(){localStorage.setItem('ft_wC',JSON.stringify(W));}
 function wkStart(off){const d=new Date(),day=d.getDay(),m=new Date(d);m.setDate(d.getDate()-(day===0?6:day-1)+off*7);m.setHours(0,0,0,0);return m;}
 function wkDates(off){const s=wkStart(off);return Array.from({length:7},(_,i)=>{const d=new Date(s);d.setDate(s.getDate()+i);return d.getFullYear()+'-'+S2(d.getMonth()+1)+'-'+S2(d.getDate());});}
@@ -509,8 +509,8 @@ function renderWt(){
   hint.style.display='none';if(tc)tc.destroy();
   tc=new Chart(canvas,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{label:'Weight',data:wa.map(w=>w.aw),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.3,pointRadius:4,pointBackgroundColor:'#1D9E75',yAxisID:'y',spanGaps:true},{label:'Body fat',data:wa.map(w=>w.ab),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,pointRadius:4,pointBackgroundColor:'#378ADD',yAxisID:'y2',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},color:'#888'}},y:{position:'left',grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:10},color:'#1D9E75'},title:{display:true,text:'kg',font:{size:10},color:'#1D9E75'}},y2:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},color:'#378ADD'},title:{display:true,text:'%',font:{size:10},color:'#378ADD'}}}}});
 }
-function addWlog(){const w=+document.getElementById('ww').value||0,b=+document.getElementById('wbf').value||0,date=document.getElementById('wdate').value;if(!date||(w===0&&b===0))return;if(!W[U])W[U]=[];const i=W[U].findIndex(e=>e.date===date);const en={date,weight:w||null,bf:b||null};if(i>=0)W[U][i]=en;else W[U].push(en);sWlog();renderWt();pushToSheet();}
-function delWl(date){if(!W[U])return;W[U]=W[U].filter(e=>e.date!==date);sWlog();renderWt();pushToSheet();}
+function addWlog(){const w=+document.getElementById('ww').value||0,b=+document.getElementById('wbf').value||0,date=document.getElementById('wdate').value;if(!date||(w===0&&b===0))return;if(!W[U])W[U]=[];const i=W[U].findIndex(e=>e.date===date);const en={date,weight:w||null,bf:b||null};if(i>=0)W[U][i]=en;else W[U].push(en);sWlog();renderWt();}
+function delWl(date){if(!W[U])return;W[U]=W[U].filter(e=>e.date!==date);sWlog();renderWt();}
 function sTlog(){localStorage.setItem('ft_tC',JSON.stringify(T));}
 function sElib(){localStorage.setItem('ft_eC',JSON.stringify(EL));}
 function buildDD(){const s=document.getElementById('exdd');const cv=s.value;s.innerHTML='<option value="">-- select exercise --</option>'+EL.map(e=>'<option value="'+e+'">'+e+'</option>').join('')+'<option value="__c__">+ add new exercise</option>';s.value=cv||'';}
@@ -538,7 +538,7 @@ function saveGym(){
   const i=T[U].findIndex(s=>s.date===sDate&&s.sport==='gym');
   const sess={date:sDate,sport:'gym',exercises:exs};
   if(i>=0)T[U][i]=sess;else T[U].push(sess);
-  sTlog();cards=[];renderCards();checkDailyNudge(sDate);pushToSheet();
+  sTlog();cards=[];renderCards();checkDailyNudge(sDate);
 }
 function buildCFields(s){
   const el=document.getElementById('cfields');
@@ -555,7 +555,7 @@ function saveCardio(){
   if(!dur&&!dist){alert('Enter at least duration or distance.');return;}
   if(!T[U])T[U]=[];
   T[U].push({date:sDate,sport,duration:dur,distance:dist,laps,notes});
-  sTlog();showLast(sport);buildCFields(sport);checkDailyNudge(sDate);pushToSheet();
+  sTlog();showLast(sport);buildCFields(sport);checkDailyNudge(sDate);
 }
 function renderHist(){
   const all=(T[U]||[]).slice().reverse();
@@ -571,6 +571,16 @@ function renderHist(){
   }).join('');
 }
 function renderTrain(){document.getElementById('sdlbl').textContent=dlbl(sDate);document.getElementById('sn').disabled=sDate>=td();renderCards();}
+function scheduleNightlySync(){
+  const now=new Date();
+  const night=new Date();
+  night.setHours(24,0,0,0);
+  const msUntilMidnight=night-now;
+  setTimeout(()=>{
+    pushToSheet();
+    setInterval(()=>pushToSheet(),24*60*60*1000);
+  },msUntilMidnight);
+}
 function renderHome(){
   const name=U.charAt(0).toUpperCase()+U.slice(1);
   document.getElementById('h-greet').textContent=greet()+', '+name;
@@ -597,7 +607,7 @@ function renderHome(){
   document.getElementById('wlbls').innerHTML=dts.map((_,i)=>'<div class="wlbl">'+dayL[i]+'</div>').join('');
   document.getElementById('h-sess').textContent=dts.filter(d=>trainedDates.has(d)).length;
 }
-loadP(P[U]);calc();updDUI();
+loadP(P[U]);calc();scheduleNightlySync();updDUI();
 document.getElementById('sdlbl').textContent=dlbl(sDate);
 document.getElementById('wdate').value=td();
 buildDD();renderHome();
