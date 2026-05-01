@@ -571,16 +571,7 @@ function renderHist(){
   }).join('');
 }
 function renderTrain(){document.getElementById('sdlbl').textContent=dlbl(sDate);document.getElementById('sn').disabled=sDate>=td();renderCards();}
-function scheduleNightlySync(){
-  const now=new Date();
-  const night=new Date();
-  night.setHours(24,0,0,0);
-  const msUntilMidnight=night-now;
-  setTimeout(()=>{
-    pushToSheet();
-    setInterval(()=>pushToSheet(),24*60*60*1000);
-  },msUntilMidnight);
-}
+
 function renderHome(){
   const name=U.charAt(0).toUpperCase()+U.slice(1);
   document.getElementById('h-greet').textContent=greet()+', '+name;
@@ -607,7 +598,7 @@ function renderHome(){
   document.getElementById('wlbls').innerHTML=dts.map((_,i)=>'<div class="wlbl">'+dayL[i]+'</div>').join('');
   document.getElementById('h-sess').textContent=dts.filter(d=>trainedDates.has(d)).length;
 }
-loadP(P[U]);calc();scheduleNightlySync();updDUI();
+loadP(P[U]);calc();updDUI();
 document.getElementById('sdlbl').textContent=dlbl(sDate);
 document.getElementById('wdate').value=td();
 buildDD();renderHome();
