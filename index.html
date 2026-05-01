@@ -122,6 +122,12 @@
     .sync-btn.pull{background:#378ADD}
     .sync-btn.push{background:#1D9E75}
     .sync-note{font-size:11px;color:#a0a0a5;text-align:center;margin-bottom:1rem;min-height:16px}
+    .week-bars{display:flex;gap:4px;align-items:flex-end;height:64px;margin-bottom:6px}
+    .week-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+    .week-bar-wrap{width:100%;flex:1;display:flex;align-items:flex-end}
+    .week-bar-inner{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .3s,background .3s}
+    .week-bar-lbl{font-size:9px;color:#a0a0a5}
+    .week-bar-val{font-size:9px;color:#6b6b6b;font-weight:500}
   </style>
 </head>
 <body>
@@ -168,6 +174,15 @@
     </div>
     <div class="wdots" id="wdots"></div>
     <div class="wlbls" id="wlbls"></div>
+  </div>
+  <div class="card">
+    <div class="ctitle">This week — daily calories</div>
+    <div class="week-bars" id="week-bars"></div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:2px">
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#1D9E75"></div>Under target</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#E24B4A"></div>Over target</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#f2f2f7;border:0.5px solid #c7c7cc"></div>No data</div>
+    </div>
   </div>
   <div class="qgrid">
     <button class="qbtn" onclick="goPage('daily')"><span class="qicon">&#127869;</span><span class="qlbl">Log food</span><span class="qsub">Daily log</span></button>
@@ -572,6 +587,42 @@ function renderHist(){
 }
 function renderTrain(){document.getElementById('sdlbl').textContent=dlbl(sDate);document.getElementById('sn').disabled=sDate>=td();renderCards();}
 
+function renderWeekBars(){
+  const dts=wkDates(0);
+  const dayL=['M','T','W','T','F','S','S'];
+  const tdee=getTDEE();
+  const today=td();
+  const vals=dts.map(d=>{
+    const k=U+'_'+d;
+    const log=L[k];
+    if(!log||(!log.food.length&&!log.exercise.length))return null;
+    const fc=log.food.reduce((a,f)=>a+f.cal,0);
+    const ec=log.exercise.reduce((a,e)=>a+e.cal,0);
+    return fc-ec;
+  });
+  const maxVal=Math.max(...vals.filter(v=>v!==null),tdee,1);
+  const container=document.getElementById('week-bars');
+  if(!container)return;
+  container.innerHTML=dts.map((d,i)=>{
+    const v=vals[i];
+    const isToday=d===today;
+    const heightPct=v!==null?Math.min(v/maxVal*100,100):8;
+    const bg=v===null?'#e0e0e5':v>tdee?'#E24B4A':'#1D9E75';
+    const valLabel=v!==null?v+'':'-';
+    const border=isToday?'border:2px solid #1a1a1a;border-radius:6px;padding:2px;':'';
+    return '<div class="week-bar-col" onclick="jumpToDate(\''+d+'\')" style="'+border+'">'
+      +'<div class="week-bar-val">'+valLabel+'</div>'
+      +'<div class="week-bar-wrap"><div class="week-bar-inner" style="height:'+heightPct+'%;background:'+bg+'"></div></div>'
+      +'<div class="week-bar-lbl">'+dayL[i]+'</div>'
+      +'</div>';
+  }).join('');
+}
+function jumpToDate(d){
+  curDate=d;
+  goPage('daily');
+  updDUI();
+  renderLog();
+}
 function renderHome(){
   const name=U.charAt(0).toUpperCase()+U.slice(1);
   document.getElementById('h-greet').textContent=greet()+', '+name;
@@ -597,6 +648,7 @@ function renderHome(){
   document.getElementById('wdots').innerHTML=dts.map((d,i)=>'<div class="wdot'+(trainedDates.has(d)?' trained':'')+(d===today?' today':'')+'>'+(trainedDates.has(d)?'v':dayL[i])+'</div>').join('');
   document.getElementById('wlbls').innerHTML=dts.map((_,i)=>'<div class="wlbl">'+dayL[i]+'</div>').join('');
   document.getElementById('h-sess').textContent=dts.filter(d=>trainedDates.has(d)).length;
+  renderWeekBars();
 }
 loadP(P[U]);calc();updDUI();
 document.getElementById('sdlbl').textContent=dlbl(sDate);
