@@ -579,11 +579,18 @@ function renderHist(){
   if(!fil.length){c.innerHTML='<div class="empty">No sessions logged yet</div>';return;}
   const bdg=s=>{const m={gym:'bg-gym',run:'bg-run',swim:'bg-swim'};return'<span class="badge '+(m[s]||'bg-other')+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';};
   c.innerHTML=fil.map(s=>{
+    const idx=(T[U]||[]).indexOf(s);
     let prev='';
     if(s.sport==='gym')prev=(s.exercises||[]).map(e=>e.name+' ('+e.sets.length+' sets)').join(', ');
     else prev=[s.duration?s.duration+'min':null,s.distance?(s.distance+(s.sport==='swim'?'m':'km')):null,s.laps?s.laps+' laps':null,s.notes].filter(Boolean).join(' / ');
-    return'<div class="psess"><div class="psess-hdr"><span class="psess-date">'+fmtD(s.date)+'</span>'+bdg(s.sport)+'</div><div class="psess-prev">'+prev+'</div></div>';
+    return'<div class="psess"><div class="psess-hdr"><span class="psess-date">'+fmtD(s.date)+'</span>'+bdg(s.sport)+'<button onclick="delSession('+idx+')" style="background:none;border:none;color:#a0a0a5;cursor:pointer;font-size:18px;padding:0;margin-left:6px">x</button></div><div class="psess-prev">'+prev+'</div></div>';
   }).join('');
+}
+function delSession(idx){
+  if(!T[U]||!T[U][idx])return;
+  T[U].splice(idx,1);
+  sTlog();
+  renderHist();
 }
 function renderTrain(){document.getElementById('sdlbl').textContent=dlbl(sDate);document.getElementById('sn').disabled=sDate>=td();renderCards();}
 
