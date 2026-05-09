@@ -579,7 +579,7 @@ function renderHist(){
   if(!fil.length){c.innerHTML='<div class="empty">No sessions logged yet</div>';return;}
   const bdg=s=>{const m={gym:'bg-gym',run:'bg-run',swim:'bg-swim'};return'<span class="badge '+(m[s]||'bg-other')+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';};
   c.innerHTML=fil.map(s=>{
-    const idx=(T[U]||[]).indexOf(s);
+    const idx=(T[U]||[]).findIndex(x=>x.date===s.date&&x.sport===s.sport);
     let prev='';
     if(s.sport==='gym')prev=(s.exercises||[]).map(e=>e.name+' ('+e.sets.length+' sets)').join(', ');
     else prev=[s.duration?s.duration+'min':null,s.distance?(s.distance+(s.sport==='swim'?'m':'km')):null,s.laps?s.laps+' laps':null,s.notes].filter(Boolean).join(' / ');
