@@ -11,7 +11,7 @@
   <title>FitTrack</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;background:#f2f2f7;padding:1rem 0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;background:#f2f2f7;padding:1rem 0 80px;-webkit-tap-highlight-color:transparent}
     .app{max-width:480px;margin:0 auto;padding:0 1rem}
     .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
     .hdr h1{font-size:20px;font-weight:500}
@@ -128,6 +128,11 @@
     .week-bar-inner{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .3s,background .3s}
     .week-bar-lbl{font-size:9px;color:#a0a0a5}
     .week-bar-val{font-size:9px;color:#6b6b6b;font-weight:500}
+    .snav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:0.5px solid #e0e0e5;z-index:99;padding-bottom:env(safe-area-inset-bottom)}
+    .snav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;background:transparent;color:#a0a0a5;cursor:pointer}
+    .snav-btn.on{color:#1a1a1a}
+    .snav-icon{font-size:20px;line-height:1}
+    .snav-lbl{font-size:10px;font-weight:500}
     .wknav{background:none;border:0.5px solid #c7c7cc;border-radius:6px;padding:2px 10px;font-size:16px;color:#6b6b6b;cursor:pointer;line-height:1.4}
     .wknav:disabled{opacity:.3;cursor:default}
     .qrow{display:flex;gap:8px;margin-bottom:1rem}
@@ -267,8 +272,17 @@
       <div class="leg-item"><span class="leg-dot" style="background:#5A9E6F"></span>Walk</div>
       <div class="leg-item"><span class="leg-dot" style="background:#6B7A8D"></span>Other</div>
     </div>
-    <div id="stamp-cal"></div>
+<div id="stamp-cal"></div>
   </div>
+</div>
+
+<!-- STICKY NAV -->
+<div class="snav">
+  <button onclick="goPage('home')" id="snav-home" class="snav-btn on"><span class="snav-icon">&#127968;</span><span class="snav-lbl">Home</span></button>
+  <button onclick="goPage('daily')" id="snav-daily" class="snav-btn"><span class="snav-icon">&#128197;</span><span class="snav-lbl">Daily</span></button>
+  <button onclick="goPage('weight')" id="snav-weight" class="snav-btn"><span class="snav-icon">&#9878;</span><span class="snav-lbl">Weight</span></button>
+  <button onclick="goPage('training')" id="snav-training" class="snav-btn"><span class="snav-icon">&#128170;</span><span class="snav-lbl">Train</span></button>
+  <button onclick="goPage('profile')" id="snav-profile" class="snav-btn"><span class="snav-icon">&#128100;</span><span class="snav-lbl">Profile</span></button>
 </div>
 
 <!-- DAILY -->
@@ -531,6 +545,7 @@ function checkDailyNudge(date){const k=U+'_'+date;const log=L[k];const hasEx=log
 function goPage(p){
   document.querySelectorAll('.pg').forEach(e=>e.classList.remove('on'));
   document.getElementById('pg-'+p).classList.add('on');
+  ['home','daily','weight','training','profile'].forEach(n=>document.getElementById('snav-'+n).classList.toggle('on',n===p));
   document.querySelectorAll('.nav button').forEach((b,i)=>b.classList.toggle('on',['home','daily','weight','training','profile'][i]===p));
   if(p==='home')renderHome();
   if(p==='daily'){updDUI();renderLog();}
@@ -731,11 +746,8 @@ function renderStampCal(){
   });
   const dayL=['M','T','W','T','F','S','S'];
   const rows=[];
-  for(let w=5;w>=0;w--){
-    const woff=stampOff-w;
-    const dts=wkDates(woff);
-    rows.push(dts);
-  }
+  const dts=wkDates(stampOff);
+  rows.push(dts);
   const container=document.getElementById('stamp-cal');
   if(!container)return;
   let html='<div class="stamp-dlbl">'+dayL.map(l=>'<span>'+l+'</span>').join('')+'</div>';
