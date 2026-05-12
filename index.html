@@ -128,14 +128,63 @@
     .week-bar-inner{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .3s,background .3s}
     .week-bar-lbl{font-size:9px;color:#a0a0a5}
     .week-bar-val{font-size:9px;color:#6b6b6b;font-weight:500}
+    .wknav{background:none;border:0.5px solid #c7c7cc;border-radius:6px;padding:2px 10px;font-size:16px;color:#6b6b6b;cursor:pointer;line-height:1.4}
+    .wknav:disabled{opacity:.3;cursor:default}
+    .qrow{display:flex;gap:8px;margin-bottom:1rem}
+    .qsq{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border:0.5px solid #e0e0e5;border-radius:14px;background:#fff;cursor:pointer}
+    .qsq-icon{font-size:22px;line-height:1}
+    .qsq-lbl{font-size:11px;font-weight:500;color:#1a1a1a}
+    .hbg{background:none;border:none;font-size:22px;color:#1a1a1a;cursor:pointer;padding:4px 8px;line-height:1}
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:100}
+    .drawer-overlay.on{display:block}
+    .drawer{position:fixed;top:0;right:-280px;width:280px;height:100%;background:#fff;z-index:101;padding:1.5rem 1.25rem;transition:right .25s ease;overflow-y:auto;box-shadow:-2px 0 12px rgba(0,0,0,0.08)}
+    .drawer.on{right:0}
+    .drawer-title{font-size:18px;font-weight:500;margin-bottom:1.5rem}
+    .drawer-section{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:0.5px solid #e0e0e5}
+    .drawer-section:last-child{border-bottom:none}
+    .drawer-label{font-size:11px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem}
+    .drawer-sw{display:flex;gap:6px;margin-bottom:.5rem}
+    .drawer-sw button{flex:1;padding:8px;font-size:14px;border-radius:8px;border:0.5px solid #c7c7cc;background:transparent;color:#6b6b6b;cursor:pointer}
+    .drawer-sw button.on{background:#1a1a1a;color:#fff}
+    .drawer-btn{width:100%;padding:11px 14px;font-size:14px;text-align:left;border:0.5px solid #e0e0e5;border-radius:10px;background:#f2f2f7;color:#1a1a1a;cursor:pointer;margin-bottom:8px;display:block}
+    .drawer-btn.green{background:#1D9E75;color:#fff;border-color:#1D9E75}
+    .stamp-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:.875rem;padding:.75rem;background:#f2f2f7;border-radius:10px}
+    .leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#6b6b6b}
+    .leg-dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .legend-tog{font-size:11px;color:#6b6b6b;border:0.5px solid #c7c7cc;border-radius:6px;background:transparent;padding:3px 10px;cursor:pointer}
+    .stamp-row{display:flex;gap:5px;margin-bottom:5px}
+    .stamp-cell{flex:1;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:#fff;position:relative;cursor:default}
+    .stamp-cell.empty{background:#f2f2f7}
+    .stamp-cell.today{box-shadow:0 0 0 2px #1a1a1a}
+    .stamp-cell.future{opacity:.3}
+    .stamp-dot2{position:absolute;top:0;right:0;width:6px;height:6px;border-radius:50%;border:1.5px solid #fff}
+    .stamp-dlbl{display:flex;gap:5px;margin-bottom:.5rem}
+    .stamp-dlbl span{flex:1;text-align:center;font-size:9px;color:#a0a0a5}
   </style>
 </head>
 <body>
 <div class="app">
 <div class="hdr"><h1>FitTrack</h1>
-  <div class="sw">
-    <button class="on" onclick="swUser('sam')">Sam</button>
-    <button onclick="swUser('bella')">Bella</button>
+  <button class="hbg" onclick="openDrawer()">&#9776;</button>
+</div>
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-title">Menu</div>
+  <div class="drawer-section">
+    <div class="drawer-label">Account</div>
+    <div class="drawer-sw">
+      <button class="on" id="dsw-sam" onclick="swUser('sam')">Sam</button>
+      <button id="dsw-bella" onclick="swUser('bella')">Bella</button>
+    </div>
+  </div>
+  <div class="drawer-section">
+    <div class="drawer-label">Data</div>
+    <button class="drawer-btn" onclick="pullFromSheet();closeDrawer()">&#8595; Load latest</button>
+    <button class="drawer-btn green" onclick="pushToSheet();closeDrawer()">&#8593; Save &amp; sync</button>
+    <div class="sync-note" id="sync-note">—</div>
+  </div>
+  <div class="drawer-section">
+    <button class="drawer-btn" onclick="goPage('profile');closeDrawer()">&#128100; Profile settings</button>
   </div>
 </div>
 <div class="nav">
@@ -150,11 +199,26 @@
 <div id="pg-home" class="pg on">
   <div style="font-size:22px;font-weight:500;margin-bottom:4px" id="h-greet">Good morning, Sam</div>
   <div style="font-size:13px;color:#6b6b6b;margin-bottom:1rem" id="h-date2"></div>
-  <div class="sync-row">
-    <button class="sync-btn pull" onclick="pullFromSheet()">&#8595; Load latest</button>
-    <button class="sync-btn push" onclick="pushToSheet()">&#8593; Save &amp; sync</button>
+
+  <!-- Quick log buttons -->
+  <div class="qrow">
+    <button class="qsq" onclick="goPage('daily');swTab('food')"><span class="qsq-icon">&#127869;</span><span class="qsq-lbl">Food</span></button>
+    <button class="qsq" onclick="goTraining()"><span class="qsq-icon">&#128170;</span><span class="qsq-lbl">Train</span></button>
+    <button class="qsq" onclick="goPage('weight')"><span class="qsq-icon">&#9878;</span><span class="qsq-lbl">Weight</span></button>
+    <button class="qsq" onclick="goPage('daily');swTab('exercise')"><span class="qsq-icon">&#128293;</span><span class="qsq-lbl">Calories</span></button>
   </div>
-  <div class="sync-note" id="sync-note">Tap "Load latest" when opening on a new device</div>
+
+  <!-- This week stats -->
+  <div class="card">
+    <div class="ctitle">This week</div>
+    <div class="hstats">
+      <div class="hstat"><div class="hstat-lbl">Avg weight</div><div class="hstat-val" id="h-wt">—</div><div class="hstat-sub" id="h-wt-tr"></div></div>
+      <div class="hstat"><div class="hstat-lbl">Body fat</div><div class="hstat-val" id="h-bf2">—</div><div class="hstat-sub" id="h-bf-tr"></div></div>
+      <div class="hstat"><div class="hstat-lbl">Sessions</div><div class="hstat-val" id="h-sess">0</div><div class="hstat-sub tfl">this week</div></div>
+    </div>
+  </div>
+
+  <!-- Today's calories -->
   <div class="card">
     <div class="ctitle">Today's calories</div>
     <div class="cal-hero-nums">
@@ -165,30 +229,45 @@
     <div class="hbar-trk"><div class="hbar-fill" id="h-bar" style="width:0%"></div></div>
     <div class="bsub"><span id="h-bl">0 kcal net</span><span id="h-br">—</span></div>
   </div>
+
+  <!-- Daily calories chart (scrollable by week) -->
   <div class="card">
-    <div class="ctitle">This week</div>
-    <div class="hstats">
-      <div class="hstat"><div class="hstat-lbl">Avg weight</div><div class="hstat-val" id="h-wt">—</div><div class="hstat-sub" id="h-wt-tr"></div></div>
-      <div class="hstat"><div class="hstat-lbl">Body fat</div><div class="hstat-val" id="h-bf2">—</div><div class="hstat-sub" id="h-bf-tr"></div></div>
-      <div class="hstat"><div class="hstat-lbl">Sessions</div><div class="hstat-val" id="h-sess">0</div><div class="hstat-sub tfl">this week</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <div class="ctitle" style="margin-bottom:0" id="wbar-title">This week — calories</div>
+      <div style="display:flex;gap:4px">
+        <button class="wknav" id="wbar-prev" onclick="chWBar(-1)">&#8249;</button>
+        <button class="wknav" id="wbar-next" onclick="chWBar(1)" disabled>&#8250;</button>
+      </div>
     </div>
-    <div class="wdots" id="wdots"></div>
-    <div class="wlbls" id="wlbls"></div>
-  </div>
-  <div class="card">
-    <div class="ctitle">This week — daily calories</div>
     <div class="week-bars" id="week-bars"></div>
-    <div style="display:flex;gap:12px;justify-content:center;margin-top:2px">
-      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#1D9E75"></div>Under target</div>
-      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#E24B4A"></div>Over target</div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#1D9E75"></div>Under</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#E24B4A"></div>Over</div>
       <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#6b6b6b"><div style="width:8px;height:8px;border-radius:2px;background:#f2f2f7;border:0.5px solid #c7c7cc"></div>No data</div>
     </div>
   </div>
-  <div class="qgrid">
-    <button class="qbtn" onclick="goPage('daily')"><span class="qicon">&#127869;</span><span class="qlbl">Log food</span><span class="qsub">Daily log</span></button>
-    <button class="qbtn" onclick="goTraining()"><span class="qicon">&#128170;</span><span class="qlbl">Log training</span><span class="qsub">Exercise + details</span></button>
-    <button class="qbtn" onclick="goPage('weight')"><span class="qicon">&#9878;</span><span class="qlbl">Log weight</span><span class="qsub">Weight &amp; BF%</span></button>
-    <button class="qbtn" onclick="goPage('profile')"><span class="qicon">&#128100;</span><span class="qlbl">Profile</span><span class="qsub" id="h-tdee-sub">— kcal target</span></button>
+
+  <!-- Training stamp calendar -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+      <div class="ctitle" style="margin-bottom:0">Training</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="legend-tog" onclick="toggleLegend()">Legend</button>
+        <div style="display:flex;gap:4px">
+          <button class="wknav" id="stamp-prev" onclick="chStamp(-1)">&#8249;</button>
+          <button class="wknav" id="stamp-next" onclick="chStamp(1)" disabled>&#8250;</button>
+        </div>
+      </div>
+    </div>
+    <div class="stamp-legend" id="stamp-legend" style="display:none">
+      <div class="leg-item"><span class="leg-dot" style="background:#2C4A8C"></span>Gym</div>
+      <div class="leg-item"><span class="leg-dot" style="background:#E8A020"></span>Run</div>
+      <div class="leg-item"><span class="leg-dot" style="background:#7B5EA7"></span>Swim</div>
+      <div class="leg-item"><span class="leg-dot" style="background:#E06830"></span>Cycle</div>
+      <div class="leg-item"><span class="leg-dot" style="background:#5A9E6F"></span>Walk</div>
+      <div class="leg-item"><span class="leg-dot" style="background:#6B7A8D"></span>Other</div>
+    </div>
+    <div id="stamp-cal"></div>
   </div>
 </div>
 
@@ -430,7 +509,7 @@ async function pullFromSheet(){
     localStorage.setItem('ft_wC',JSON.stringify(W));
     localStorage.setItem('ft_tC',JSON.stringify(T));
     localStorage.setItem('ft_eC',JSON.stringify(EL));
-    loadP(P[U]);calc();scheduleNightlySync();renderLog();renderWt();renderHome();buildDD();
+    loadP(P[U]);calc();renderLog();renderWt();renderHome();buildDD();
     const now=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
     setSyncNote('Loaded at '+now,'#1D9E75');
   }catch(e){setSyncNote('Load failed — check connection','#E24B4A');}
@@ -444,7 +523,7 @@ function offD(b,n){const[y,m,day]=b.split('-').map(Number);const d=new Date(y,m-
 function greet(){const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening';}
 function hideNudge(id){document.getElementById(id).classList.remove('show');}
 function showNudge(id){document.getElementById(id).classList.add('show');}
-function goTraining(){goPage('daily');swTab('exercise');}
+function goTraining(){goPage('training');}
 function goDailyEx(){curDate=sDate;hideNudge('nudge-daily');goPage('daily');swTab('exercise');updDUI();renderLog();}
 function checkTrainNudge(){if(gLog().exercise.length>0)showNudge('nudge-train');}
 function checkDailyNudge(date){const k=U+'_'+date;const log=L[k];const hasEx=log&&log.exercise&&log.exercise.length>0;if(!hasEx){document.getElementById('nudge-daily-msg').textContent='No calories burned logged for '+fmtD(date)+'. Add it to your daily log?';showNudge('nudge-daily');}else hideNudge('nudge-daily');}
@@ -458,7 +537,7 @@ function goPage(p){
   if(p==='weight')renderWt();
   if(p==='training')renderTrain();
 }
-function swUser(u){saveP(U);U=u;loadP(P[U]);document.querySelectorAll('.sw button').forEach((b,i)=>b.classList.toggle('on',(i===0&&u==='sam')||(i===1&&u==='bella')));cards=[];renderCards();calc();renderLog();renderWt();renderHome();}
+function swUser(u){saveP(U);U=u;loadP(P[U]);updDrawerSw();cards=[];wBarOff=0;stampOff=0;renderCards();calc();renderLog();renderWt();renderHome();}
 function swTab(t){document.getElementById('t-food').style.display=t==='food'?'block':'none';document.getElementById('t-ex').style.display=t==='exercise'?'block':'none';document.querySelectorAll('#daily-tabs button').forEach((b,i)=>b.classList.toggle('on',(i===0&&t==='food')||(i===1&&t==='exercise')));}
 function swTrain(t){document.getElementById('tr-log').style.display=t==='log'?'block':'none';document.getElementById('tr-history').style.display=t==='history'?'block':'none';document.querySelectorAll('#train-tabs button').forEach((b,i)=>b.classList.toggle('on',(i===0&&t==='log')||(i===1&&t==='history')));if(t==='history')renderHist();}
 function selSport(s,btn){sport=s;document.querySelectorAll('#sport-pills .spill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('sp-gym').style.display=s==='gym'?'block':'none';document.getElementById('sp-cardio').style.display=s!=='gym'?'block':'none';if(s!=='gym'){buildCFields(s);showLast(s);}}
@@ -594,11 +673,18 @@ function delSession(idx){
 }
 function renderTrain(){document.getElementById('sdlbl').textContent=dlbl(sDate);document.getElementById('sn').disabled=sDate>=td();renderCards();}
 
+let wBarOff=0;
+function chWBar(n){const nw=wBarOff+n;if(nw>0)return;wBarOff=nw;renderWeekBars();}
 function renderWeekBars(){
-  const dts=wkDates(0);
+  const dts=wkDates(wBarOff);
   const dayL=['M','T','W','T','F','S','S'];
   const tdee=getTDEE();
   const today=td();
+  const isThisWk=wBarOff===0;
+  const title=document.getElementById('wbar-title');
+  if(title)title.textContent=isThisWk?'This week — calories':wkStr(wBarOff)+' — calories';
+  const nxt=document.getElementById('wbar-next');
+  if(nxt)nxt.disabled=wBarOff>=0;
   const vals=dts.map(d=>{
     const k=U+'_'+d;
     const log=L[k];
@@ -613,17 +699,81 @@ function renderWeekBars(){
   container.innerHTML=dts.map((d,i)=>{
     const v=vals[i];
     const isToday=d===today;
+    const isFuture=d>today;
     const heightPct=v!==null?Math.min(v/maxVal*100,100):8;
     const bg=v===null?'#e0e0e5':v>tdee?'#E24B4A':'#1D9E75';
     const valLabel=v!==null?v+'':'-';
     const border=isToday?'border:2px solid #1a1a1a;border-radius:6px;padding:2px;':'';
-    return '<div class="week-bar-col" onclick="jumpToDate(\''+d+'\')" style="'+border+'">'
+    const op=isFuture?'opacity:.3;':'';
+    return '<div class="week-bar-col" onclick="jumpToDate(\''+d+'\')" style="'+border+op+'">'
       +'<div class="week-bar-val">'+valLabel+'</div>'
       +'<div class="week-bar-wrap"><div class="week-bar-inner" style="height:'+heightPct+'%;background:'+bg+'"></div></div>'
       +'<div class="week-bar-lbl">'+dayL[i]+'</div>'
       +'</div>';
   }).join('');
 }
+let stampOff=0;
+const SPORT_COL={gym:'#2C4A8C',run:'#E8A020',swim:'#7B5EA7',cycle:'#E06830',walk:'#5A9E6F',other:'#6B7A8D'};
+const SPORT_ABR={gym:'GYM',run:'RUN',swim:'SWM',cycle:'CYC',walk:'WLK',other:'OTH'};
+function sportColor(s){return SPORT_COL[s]||SPORT_COL.other;}
+function sportAbr(s){return SPORT_ABR[s]||'OTH';}
+function chStamp(n){const nw=stampOff+n;if(nw>0)return;stampOff=nw;renderStampCal();}
+function toggleLegend(){const el=document.getElementById('stamp-legend');if(el)el.style.display=el.style.display==='none'?'flex':'none';}
+function renderStampCal(){
+  const today=td();
+  const nxt=document.getElementById('stamp-next');
+  if(nxt)nxt.disabled=stampOff>=0;
+  const sessions=T[U]||[];
+  const byDate={};
+  sessions.forEach(s=>{
+    if(!byDate[s.date])byDate[s.date]=[];
+    byDate[s.date].push(s);
+  });
+  const dayL=['M','T','W','T','F','S','S'];
+  const rows=[];
+  for(let w=5;w>=0;w--){
+    const woff=stampOff-w;
+    const dts=wkDates(woff);
+    rows.push(dts);
+  }
+  const container=document.getElementById('stamp-cal');
+  if(!container)return;
+  let html='<div class="stamp-dlbl">'+dayL.map(l=>'<span>'+l+'</span>').join('')+'</div>';
+  rows.forEach(dts=>{
+    html+='<div class="stamp-row">';
+    dts.forEach(d=>{
+      const isFuture=d>today;
+      const isToday=d===today;
+      const sess=byDate[d]||[];
+      let cls='stamp-cell';
+      if(isFuture)cls+=' future';
+      if(isToday)cls+=' today';
+      let inner='';
+      let dot2='';
+      if(sess.length===0){
+        cls+=' empty';
+        inner='';
+      } else {
+        const primary=sess.reduce((a,b)=>{
+          const ac=a.sport==='gym'?500:a.duration?a.duration*7:300;
+          const bc=b.sport==='gym'?500:b.duration?b.duration*7:300;
+          return ac>=bc?a:b;
+        });
+        const col=sportColor(primary.sport);
+        const abr=sportAbr(primary.sport);
+        inner='style="background:'+col+'"';
+        if(sess.length>1){
+          const sec=sess.find(s=>s!==primary);
+          dot2='<span class="stamp-dot2" style="background:'+sportColor(sec.sport)+'"></span>';
+        }
+      }
+     html+='<div class="'+cls+'" '+inner+'>'+(sess.length?sportAbr(sess[0].sport):'')+dot2+'</div>';
+    });
+    html+='</div>';
+  });
+  container.innerHTML=html;
+}
+
 function jumpToDate(d){
   curDate=d;
   goPage('daily');
@@ -640,7 +790,6 @@ function renderHome(){
   const re=document.getElementById('h-rem');re.textContent=rem;re.className='cal-hval'+(rem<0?' red':' grn');
   const bar=document.getElementById('h-bar');bar.style.width=Math.max(0,pct).toFixed(1)+'%';bar.className='hbar-fill'+(net>tdee?' red':net>tdee*0.85?' amb':'');
   document.getElementById('h-bl').textContent=net+' kcal net';document.getElementById('h-br').textContent='of '+tdee+' kcal target';
-  document.getElementById('h-tdee-sub').textContent=getTDEE()+' kcal target';
   const ul=W[U]||[],dts=wkDates(0),pdts=wkDates(-1);
   const tw=ul.filter(e=>dts.includes(e.date)),pw=ul.filter(e=>pdts.includes(e.date));
   const avg=arr=>{const v=arr.filter(e=>e.weight);return v.length?+(v.reduce((a,e)=>a+e.weight,0)/v.length).toFixed(1):null;};
@@ -651,12 +800,15 @@ function renderHome(){
   const tH=(c,p,lb)=>{if(c===null||p===null)return'<span class="tfl">no data</span>';const d=+(c-p).toFixed(1),b=lb?d<0:d>0;return'<span class="'+(d===0?'tfl':b?'tdn':'tup')+'">'+(d>0?'+':'')+d+' vs last wk</span>';};
   document.getElementById('h-wt-tr').innerHTML=tH(cw,pw2,true);document.getElementById('h-bf-tr').innerHTML=tH(cb,pb,true);
   const trainedDates=new Set((T[U]||[]).map(s=>s.date));
-  const dayL=['M','T','W','T','F','S','S'],today=td();
-  document.getElementById('wdots').innerHTML=dts.map((d,i)=>'<div class="wdot'+(trainedDates.has(d)?' trained':'')+(d===today?' today':'')+'>'+(trainedDates.has(d)?'v':dayL[i])+'</div>').join('');
-  document.getElementById('wlbls').innerHTML=dts.map((_,i)=>'<div class="wlbl">'+dayL[i]+'</div>').join('');
-  document.getElementById('h-sess').textContent=dts.filter(d=>trainedDates.has(d)).length;
+  const dts2=wkDates(0);
+  document.getElementById('h-sess').textContent=dts2.filter(d=>trainedDates.has(d)).length;
   renderWeekBars();
+  renderStampCal();
 }
+function openDrawer(){document.getElementById('drawer').classList.add('on');document.getElementById('drawer-overlay').classList.add('on');}
+function closeDrawer(){document.getElementById('drawer').classList.remove('on');document.getElementById('drawer-overlay').classList.remove('on');}
+function updDrawerSw(){document.getElementById('dsw-sam').classList.toggle('on',U==='sam');document.getElementById('dsw-bella').classList.toggle('on',U==='bella');}
+
 loadP(P[U]);calc();updDUI();
 document.getElementById('sdlbl').textContent=dlbl(sDate);
 document.getElementById('wdate').value=td();
