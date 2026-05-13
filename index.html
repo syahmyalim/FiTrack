@@ -174,8 +174,8 @@
 .insight-strip{display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e0e0e5;border-radius:12px;padding:.875rem 1rem;margin-bottom:1rem;cursor:pointer}
 .insight-strip i{stroke:#1D9E75}
 .insight-strip span{font-size:13px;color:#1a1a1a;flex:1;line-height:1.4}
-.chart-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:1rem;overflow:hidden}
-.chart-card{background:#fff;border:0.5px solid #e0e0e5;border-radius:14px;padding:.875rem;cursor:pointer;overflow:hidden}
+.chart-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:1rem;overflow:hidden;align-items:start}
+.chart-card{background:#fff;border:0.5px solid #e0e0e5;border-radius:14px;padding:.875rem;cursor:pointer;overflow:hidden;min-height:0}
 .chart-card:active{background:#f2f2f7}
 .chart-card-label{font-size:10px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .chart-card-chart{position:relative;height:72px;width:100%;margin-bottom:8px;display:block}
@@ -323,7 +323,7 @@
 <button class="fab fab-log" id="fab-log" onclick="openLogModal()"><i data-lucide="notebook-pen"></i></button>
 
 <!-- STATS FAB (training page only) -->
-<button class="fab fab-stats hidden" id="fab-stats" onclick="openStatsModal()"><i data-lucide="bar-chart-2"></i></button>
+<button class="fab fab-stats hidden" id="fab-stats" onclick="openStatsModal()" style="display:none!important"><i data-lucide="bar-chart-2"></i></button>
 
 <!-- LOG MODAL -->
 <div class="modal-overlay" id="log-modal" style="display:none">
@@ -396,8 +396,8 @@
     <span id="insight-text">Analysing your data...</span>
     <i data-lucide="chevron-right" style="width:14px;height:14px;flex-shrink:0;margin-left:auto"></i>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:1rem" id="pg-streaks"></div>
-  <div id="pg-goal"></div>
+  <div id="pg-streaks" style="display:flex;gap:8px;margin-bottom:1rem"></div>
+  <div id="pg-goal" style="margin-bottom:1rem"></div>
     <div class="chart-card" onclick="openChartOverlay('body')">
       <div class="chart-card-label">Body composition</div>
       <div class="chart-card-chart"><canvas id="mini-body-chart"></canvas></div>
@@ -629,7 +629,6 @@ function goPage(p){
   document.querySelectorAll('.pg').forEach(e=>e.classList.remove('on'));
   document.getElementById('pg-'+p).classList.add('on');
   ['home','progress','training'].forEach(n=>{const b=document.getElementById('snav-'+n);if(b)b.classList.toggle('on',n===p);});
-  const sf=document.getElementById('fab-stats');if(sf){sf.style.display='flex';if(p==='training')sf.classList.remove('hidden');else sf.classList.add('hidden');}
   if(p==='home')renderHome();
   if(p==='progress'){destroyMinis();setTimeout(()=>renderProgress(),50);}
   if(p==='training')renderTrain();
@@ -912,45 +911,23 @@ function renderStreaks(){
   const el=document.getElementById('pg-streaks');
   if(!el)return;
   const today=td();
-  // Food logging streak
-  let foodCur=0,foodBest=0,foodRun=0;
   const foodKeys=Object.keys(L).filter(k=>k.startsWith(U+'_')).map(k=>k.replace(U+'_','')).sort();
-  // count backwards from today
-  let d=today;
-  while(true){
-    const k=U+'_'+d;
-    if(L[k]&&L[k].food&&L[k].food.length){foodCur++;d=offD(d,-1);}
-    else break;
-  }
-  // find best streak
-  let run=0;
-  foodKeys.forEach(date=>{
-    const k=U+'_'+date;
-    if(L[k]&&L[k].food&&L[k].food.length){run++;foodBest=Math.max(foodBest,run);}
-    else run=0;
-  });
+  let foodCur=0,d=today;
+  while(true){const k=U+'_'+d;if(L[k]&&L[k].food&&L[k].food.length){foodCur++;d=offD(d,-1);}else break;}
+  let foodBest=0,run=0;
+  foodKeys.forEach(date=>{const k=U+'_'+date;if(L[k]&&L[k].food&&L[k].food.length){run++;foodBest=Math.max(foodBest,run);}else run=0;});
   foodBest=Math.max(foodBest,foodCur);
-  // Training streak
   const sessions=T[U]||[];
   const trainDates=new Set(sessions.map(s=>s.date));
-  let trainCur=0;
-  d=today;
+  let trainCur=0;d=today;
   while(trainDates.has(d)){trainCur++;d=offD(d,-1);}
   let trainBest=0,trainRun=0;
   const allDates=[...new Set([...foodKeys,...sessions.map(s=>s.date)])].sort();
   allDates.forEach(date=>{if(trainDates.has(date)){trainRun++;trainBest=Math.max(trainBest,trainRun);}else trainRun=0;});
   trainBest=Math.max(trainBest,trainCur);
   el.innerHTML=`
-    <div class="streak-pill">
-      <div class="streak-num">${foodCur}<span style="font-size:14px">🔥</span></div>
-      <div class="streak-lbl">Food streak</div>
-      <div class="streak-best">best ${foodBest} days</div>
-    </div>
-    <div class="streak-pill">
-      <div class="streak-num">${trainCur}<span style="font-size:14px">💪</span></div>
-      <div class="streak-lbl">Training streak</div>
-      <div class="streak-best">best ${trainBest} days</div>
-    </div>`;
+    <div class="streak-pill"><div class="streak-num">${foodCur} <span style="font-size:16px">🔥</span></div><div class="streak-lbl">Food streak</div><div class="streak-best">best ${foodBest} days</div></div>
+    <div class="streak-pill"><div class="streak-num">${trainCur} <span style="font-size:16px">💪</span></div><div class="streak-lbl">Training streak</div><div class="streak-best">best ${trainBest} days</div></div>`;
 }
 
 function renderGoalPace(){
@@ -968,20 +945,17 @@ function renderGoalPace(){
   const pct=totalChange!==0?Math.min(Math.max(Math.round(achieved/totalChange*100),0),100):100;
   const weeksLeft=Math.max(0,tgwk-wa.length);
   const onTrack=totalChange<0?(latest.aw<=startWt+totalChange*(wa.length/tgwk)*1.1):(latest.aw>=startWt+totalChange*(wa.length/tgwk)*0.9);
-  const dir=totalChange<0?'Lose':'Gain';
-  el.innerHTML=`
-    <div class="goal-card" style="margin-bottom:1rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <div style="font-size:11px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em">${dir} to ${tgw}kg</div>
-        <div style="font-size:11px;color:${onTrack?'#1D9E75':'#EF9F27'}">${onTrack?'on track':'check pace'}</div>
-      </div>
-      <div class="goal-bar-trk"><div class="goal-bar-fill" style="width:${pct}%;background:${onTrack?'#1D9E75':'#EF9F27'}"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:#a0a0a5">
-        <span>${latest.aw}kg now</span>
-        <span>${pct}% · ${weeksLeft} wk${weeksLeft!==1?'s':''} left</span>
-        <span>${tgw}kg</span>
-      </div>
-    </div>`;
+  const dir=totalChange<0?'Lose to':'Gain to';
+  el.innerHTML=`<div class="goal-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:13px;font-weight:500;color:#1a1a1a">${dir} ${tgw}kg</span>
+      <span style="font-size:12px;color:${onTrack?'#1D9E75':'#EF9F27'};font-weight:500">${onTrack?'On track':'Check pace'}</span>
+    </div>
+    <div class="goal-bar-trk"><div class="goal-bar-fill" style="width:${pct}%;background:${onTrack?'#1D9E75':'#EF9F27'}"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#a0a0a5;margin-top:4px">
+      <span>${latest.aw}kg now</span><span>${pct}% done · ${weeksLeft}wk left</span><span>${tgw}kg</span>
+    </div>
+  </div>`;
 }
 
 function getCalData(days){
@@ -1270,44 +1244,51 @@ function openChartOverlay(type){
     const defThis=loggedThis.length?Math.round(loggedThis.reduce((a,d)=>a+(tdee-d.net),0)):null;
     const defPrev=loggedPrev.length?Math.round(loggedPrev.reduce((a,d)=>a+(tdee-d.net),0)):null;
     const defDelta=defThis!==null&&defPrev!==null?defThis-defPrev:null;
-    const overDays=calData.filter(d=>d.hasFood&&d.net>tdee).length;
     const underDays=calData.filter(d=>d.hasFood&&d.net<=tdee).length;
-    const unlogged=calData.filter(d=>!d.logged).length;
+    const overDays=calData.filter(d=>d.hasFood&&d.net>tdee).length;
     body.innerHTML=`
       <div class="ov-stat-grid">
-        <div class="ov-stat"><div class="ov-stat-lbl">Avg consumed</div><div class="ov-stat-val">${avgConsumed!==null?avgConsumed:'—'}<span>kcal</span></div><div class="ov-stat-delta" style="color:#a0a0a5">target ${tdee}</div></div>
-        <div class="ov-stat"><div class="ov-stat-lbl">This week deficit</div><div class="ov-stat-val" style="color:${defThis===null?'#1a1a1a':defThis>=0?'#1D9E75':'#E24B4A'}">${defThis!==null?(defThis>=0?'+':'')+defThis:'—'}<span>kcal</span></div><div class="ov-stat-delta" style="color:${defDelta===null?'#a0a0a5':defDelta>=0?'#1D9E75':'#E24B4A'}">${defDelta!==null?(defDelta>0?'↑ +':'↓ ')+defDelta+' vs last wk':'—'}</div></div>
-      </div>
-      <div class="ov-stat-grid" style="padding-top:0">
-        <div class="ov-stat"><div class="ov-stat-lbl">Last week deficit</div><div class="ov-stat-val" style="color:${defPrev===null?'#1a1a1a':defPrev>=0?'#1D9E75':'#E24B4A'}">${defPrev!==null?(defPrev>=0?'+':'')+defPrev:'—'}<span>kcal</span></div><div class="ov-stat-delta" style="color:#a0a0a5">${loggedPrev.length} days logged</div></div>
-        <div class="ov-stat" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;background:transparent;padding:0">
-          <div class="ov-stat" style="padding:.625rem"><div class="ov-stat-lbl">Under</div><div class="ov-stat-val" style="font-size:16px;color:#1D9E75">${underDays}</div><div class="ov-stat-delta" style="color:#a0a0a5">days</div></div>
-          <div class="ov-stat" style="padding:.625rem"><div class="ov-stat-lbl">Over</div><div class="ov-stat-val" style="font-size:16px;color:#E24B4A">${overDays}</div><div class="ov-stat-delta" style="color:#a0a0a5">days</div></div>
-          <div class="ov-stat" style="padding:.625rem"><div class="ov-stat-lbl">—</div><div class="ov-stat-val" style="font-size:16px">${unlogged}</div><div class="ov-stat-delta" style="color:#a0a0a5">unlogged</div></div>
+        <div class="ov-stat">
+          <div class="ov-stat-lbl">Avg consumed</div>
+          <div class="ov-stat-val">${avgConsumed!==null?avgConsumed:'—'}<span>kcal</span></div>
+          <div class="ov-stat-delta" style="color:#a0a0a5">target ${tdee} kcal</div>
+        </div>
+        <div class="ov-stat">
+          <div class="ov-stat-lbl">Weekly deficit</div>
+          <div class="ov-stat-val" style="color:${defThis===null?'#1a1a1a':defThis>=0?'#1D9E75':'#E24B4A'}">${defThis!==null?(defThis>=0?'+':'')+defThis:'—'}<span>kcal</span></div>
+          <div class="ov-stat-delta" style="color:${defDelta===null?'#a0a0a5':defDelta>=0?'#1D9E75':'#E24B4A'}">${defDelta!==null?(defDelta>=0?'↑ +':'↓ ')+defDelta+' vs last wk':'prev wk: '+(defPrev!==null?(defPrev>=0?'+':'')+defPrev+'kcal':'—')}</div>
         </div>
       </div>
       <div class="ov-chart-wrap">
-        <div class="ov-chart-title">Daily calories — this month</div>
-        <div style="position:relative;height:160px"><canvas id="ov-cal-chart"></canvas></div>
+        <div class="ov-chart-title">This month</div>
+        <div style="position:relative;height:180px"><canvas id="ov-cal-chart"></canvas></div>
         <div class="ov-legend" style="margin-top:.5rem">
           <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#1D9E75"></div>Under</div>
-          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#EF9F27"></div>Exercise only</div>
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#EF9F27"></div>Ex only</div>
           <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#E24B4A"></div>Over</div>
-          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#e0e0e5"></div>Unlogged</div>
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#e0e0e5"></div>—</div>
         </div>
       </div>
-      <div class="ov-chart-wrap">
-        <div class="ov-chart-title">Logging consistency — this month</div>
-        <div class="con-grid" style="gap:4px">${calData.map(d=>'<div class="con-dot" style="width:14px;height:14px;border-radius:3px;background:'+(d.hasFood&&d.hasEx?'#1D9E75':d.hasEx?'#EF9F27':d.hasFood?(d.net>tdee?'#E24B4A':'#1D9E75'):'#e0e0e5')+'"></div>').join('')}</div>
-        <div class="ov-legend" style="margin-top:.5rem;justify-content:flex-start">
-          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#1D9E75"></div>Food + exercise</div>
-          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#EF9F27"></div>Exercise only</div>
-          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#e0e0e5"></div>Nothing logged</div>
+      <div class="ov-chart-wrap" style="padding-bottom:1.5rem">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+          <div class="ov-chart-title" style="margin-bottom:0">This month</div>
+          <div style="font-size:11px;color:#6b6b6b">${underDays} under · ${overDays} over</div>
         </div>
+        <div class="con-grid" style="gap:5px">${calData.map(d=>`<div style="width:16px;height:16px;border-radius:3px;background:${d.hasFood&&d.hasEx?'#1D9E75':d.hasEx?'#EF9F27':d.hasFood?(d.net>tdee?'#E24B4A':'#1D9E75'):'#e0e0e5'}"></div>`).join('')}</div>
       </div>`;
     setTimeout(()=>{
       const ctx=document.getElementById('ov-cal-chart');
-      if(ctx)overlayChart=new Chart(ctx,{type:'bar',data:{labels:calData.map(d=>d.date.slice(8)),datasets:[{data:calData.map(d=>d.netDisplay),backgroundColor:calData.map(d=>{if(!d.logged)return'#e0e0e5';if(d.hasFood&&d.hasEx)return'#1D9E75';if(d.hasEx)return'#EF9F27';return d.net>tdee?'#E24B4A':'#1D9E75';}),borderRadius:3},{data:calData.map(()=>tdee),type:'line',borderColor:'rgba(0,0,0,0.2)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'},min:0}}}});
+      if(ctx)overlayChart=new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:calData.map(d=>d.date.slice(8)),
+          datasets:[
+            {data:calData.map(d=>d.netDisplay),backgroundColor:calData.map(d=>{if(!d.logged)return'#e0e0e5';if(d.hasEx&&!d.hasFood)return'#EF9F27';return d.net>tdee?'#E24B4A':'#1D9E75';}),borderRadius:3},
+            {data:calData.map(()=>tdee),type:'line',borderColor:'rgba(0,0,0,0.15)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}
+          ]
+        },
+        options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'},min:0}}}
+      });
     },50);
 
   } else if(type==='training'){
