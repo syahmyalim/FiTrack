@@ -149,10 +149,10 @@
     .stamp-dot2{position:absolute;top:0;right:0;width:6px;height:6px;border-radius:50%;border:1.5px solid #fff}
     .stamp-dlbl{display:flex;gap:5px;margin-bottom:.5rem}
     .stamp-dlbl span{flex:1;text-align:center;font-size:9px;color:#a0a0a5}
-    .fab{position:fixed;right:20px;border:none;border-radius:50%;width:52px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;transition:transform .2s,opacity .2s;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-    .fab i{width:22px;height:22px;stroke:#fff;stroke-width:2}
-    .fab-log{bottom:72px;background:#1a1a1a}
-    .fab-stats{bottom:132px;background:#1D9E75}
+    .fab{position:fixed;right:20px;border:none;border-radius:50%;width:56px;height:56px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:98;transition:transform .2s,opacity .2s;box-shadow:0 4px 14px rgba(0,0,0,0.18)}
+    .fab i{width:24px;height:24px;stroke:#fff;stroke-width:2}
+    .fab-log{bottom:72px;background:#1D9E75}
+    .fab-stats{bottom:140px;background:#1D9E75;opacity:0.85}
     .fab.hidden{opacity:0;pointer-events:none;transform:translateY(8px)}
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end}
     .modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:0 0 env(safe-area-inset-bottom)}
@@ -171,27 +171,42 @@
     .modal-form{display:grid;gap:8px;padding:.75rem 1.25rem;border-top:0.5px solid #e0e0e5}
     .modal-form input{padding:8px 10px;font-size:14px;border:0.5px solid #c7c7cc;border-radius:8px;background:#f2f2f7;color:#1a1a1a;width:100%}
     .modal-section-title{font-size:11px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em;padding:.75rem 1.25rem .5rem}
-    .insight-strip{display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e0e0e5;border-radius:12px;padding:.875rem 1rem;margin-bottom:1rem;cursor:pointer}
-    .insight-strip i{stroke:#1D9E75}
-    .insight-strip span{font-size:13px;color:#1a1a1a;flex:1;line-height:1.4}
-    .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
-    .chart-card{background:#fff;border:0.5px solid #e0e0e5;border-radius:14px;padding:.875rem;cursor:pointer}
-    .chart-card:active{background:#f2f2f7}
-    .chart-card-title{font-size:11px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-    .chart-card-sub{font-size:18px;font-weight:500;margin-bottom:.5rem}
-    .signal-row{padding:.75rem 0;border-bottom:0.5px solid #e0e0e5}
-    .signal-row:last-child{border-bottom:none}
-    .signal-lbl{font-size:12px;color:#6b6b6b;margin-bottom:4px}
-    .signal-val{font-size:13px;color:#1a1a1a;line-height:1.5}
-    .modal-hdr-title{font-size:16px;font-weight:500}
-    .pr-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1.25rem;border-bottom:0.5px solid #e0e0e5}
-    .pr-row:last-child{border-bottom:none}
-    .pr-name{font-size:14px}
-    .pr-val{font-size:14px;font-weight:500;color:#1D9E75}
-    .cardio-best-row{display:flex;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:0.5px solid #e0e0e5}
-    .cardio-best-row:last-child{border-bottom:none}
-    .con-grid{display:flex;flex-wrap:wrap;gap:3px}
-    .con-dot{width:12px;height:12px;border-radius:3px}
+.insight-strip{display:flex;align-items:center;gap:8px;background:#fff;border:0.5px solid #e0e0e5;border-radius:12px;padding:.875rem 1rem;margin-bottom:1rem;cursor:pointer}
+.insight-strip i{stroke:#1D9E75}
+.insight-strip span{font-size:13px;color:#1a1a1a;flex:1;line-height:1.4}
+.chart-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:1rem;overflow:hidden}
+.chart-card{background:#fff;border:0.5px solid #e0e0e5;border-radius:14px;padding:.875rem;cursor:pointer;overflow:hidden}
+.chart-card:active{background:#f2f2f7}
+.chart-card-label{font-size:10px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.chart-card-chart{position:relative;height:72px;width:100%;margin-bottom:8px}
+.chart-card-chart canvas{max-width:100%;display:block}
+.chart-card-value{font-size:18px;font-weight:500;color:#1a1a1a;line-height:1}
+.chart-card-value span{font-size:12px;font-weight:400;color:#6b6b6b;margin-left:1px}
+.chart-card-sub{font-size:11px;color:#6b6b6b;margin-top:3px;display:flex;align-items:center;gap:4px}
+.ov-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:1rem 1.25rem}
+.ov-stat{background:#f2f2f7;border-radius:10px;padding:.875rem}
+.ov-stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#a0a0a5;margin-bottom:4px;font-weight:500}
+.ov-stat-val{font-size:20px;font-weight:500;color:#1a1a1a}
+.ov-stat-val span{font-size:12px;font-weight:400;color:#6b6b6b}
+.ov-stat-delta{font-size:11px;margin-top:2px}
+.ov-chart-wrap{padding:0 1.25rem 1rem}
+.ov-chart-title{font-size:11px;font-weight:500;color:#6b6b6b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.ov-legend{display:flex;gap:14px;justify-content:center;margin-top:.5rem;margin-bottom:1rem}
+.ov-legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#6b6b6b}
+.ov-legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.signal-row{padding:.75rem 0;border-bottom:0.5px solid #e0e0e5}
+.signal-row:last-child{border-bottom:none}
+.signal-lbl{font-size:12px;color:#6b6b6b;margin-bottom:4px}
+.signal-val{font-size:13px;color:#1a1a1a;line-height:1.5}
+.modal-hdr-title{font-size:16px;font-weight:500}
+.pr-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 1.25rem;border-bottom:0.5px solid #e0e0e5}
+.pr-row:last-child{border-bottom:none}
+.pr-name{font-size:14px}
+.pr-val{font-size:14px;font-weight:500;color:#1D9E75}
+.cardio-best-row{display:flex;justify-content:space-between;padding:.75rem 1.25rem;border-bottom:0.5px solid #e0e0e5}
+.cardio-best-row:last-child{border-bottom:none}
+.con-grid{display:flex;flex-wrap:wrap;gap:3px}
+.con-dot{width:12px;height:12px;border-radius:3px}
   </style>
 </head>
 <body>
@@ -381,36 +396,29 @@
     <i data-lucide="chevron-right" style="width:14px;height:14px;flex-shrink:0;margin-left:auto"></i>
   </div>
   <div class="chart-grid">
-    <div class="chart-card" onclick="openChartOverlay('weight')">
-      <div class="chart-card-title">Weight</div>
-      <div class="chart-card-sub" id="pg-wt-sub">—</div>
-      <div style="position:relative;height:64px"><canvas id="mini-wt-chart"></canvas></div>
-    </div>
-    <div class="chart-card" onclick="openChartOverlay('bf')">
-      <div class="chart-card-title">Body fat</div>
-      <div class="chart-card-sub" id="pg-bf-sub">—</div>
-      <div style="position:relative;height:64px"><canvas id="mini-bf-chart"></canvas></div>
+    <div class="chart-card" onclick="openChartOverlay('body')">
+      <div class="chart-card-label">Body composition</div>
+      <div class="chart-card-chart"><canvas id="mini-body-chart"></canvas></div>
+      <div class="chart-card-value" id="pg-body-val">—</div>
+      <div class="chart-card-sub" id="pg-body-sub">—</div>
     </div>
     <div class="chart-card" onclick="openChartOverlay('cals')">
-      <div class="chart-card-title">Calories</div>
-      <div class="chart-card-sub" id="pg-cal-sub">—</div>
-      <div style="position:relative;height:64px"><canvas id="mini-cal-chart"></canvas></div>
+      <div class="chart-card-label">Calories</div>
+      <div class="chart-card-chart"><canvas id="mini-cal-chart"></canvas></div>
+      <div class="chart-card-value" id="pg-cal-val">—</div>
+      <div class="chart-card-sub" id="pg-cal-sub">avg this week</div>
     </div>
-    <div class="chart-card" onclick="openChartOverlay('consistency')">
-      <div class="chart-card-title">Consistency</div>
-      <div class="chart-card-sub" id="pg-con-sub">—</div>
-      <div id="mini-consistency" style="height:64px;display:flex;align-items:center"></div>
+    <div class="chart-card" onclick="openChartOverlay('training')">
+      <div class="chart-card-label">Training</div>
+      <div class="chart-card-chart"><canvas id="mini-train-chart"></canvas></div>
+      <div class="chart-card-value" id="pg-train-val">—</div>
+      <div class="chart-card-sub" id="pg-train-sub">—</div>
     </div>
-  </div>
-  <div class="card">
-    <div class="ctitle">Combined signals</div>
-    <div class="signal-row" id="sig-wt-cal">
-      <div class="signal-lbl">Weight vs calories</div>
-      <div class="signal-val" id="sig-wt-cal-val">—</div>
-    </div>
-    <div class="signal-row" id="sig-con-wt">
-      <div class="signal-lbl">Consistency vs weight</div>
-      <div class="signal-val" id="sig-con-wt-val">—</div>
+    <div class="chart-card" onclick="openChartOverlay('signals')">
+      <div class="chart-card-label">Signals</div>
+      <div class="chart-card-chart"><canvas id="mini-sig-chart"></canvas></div>
+      <div class="chart-card-value" id="pg-sig-val" style="font-size:15px">—</div>
+      <div class="chart-card-sub" id="pg-sig-sub">—</div>
     </div>
   </div>
 </div>
@@ -886,7 +894,388 @@ function updDrawerSw(){document.getElementById('dsw-sam').classList.toggle('on',
 loadP(P[U]);calc();
 document.getElementById('sdlbl').textContent=dlbl(sDate);
 buildDD();renderHome();
-let miniWtChart=null,miniBfChart=null,miniCalChart=null,overlayChart=null,gymVolChart=null,cardioDistChart=null;
+let miniBodyChart=null,miniCalChart=null,miniTrainChart=null,miniSigChart=null,overlayChart=null,overlayChart2=null,gymVolChart=null,cardioDistChart=null;
+
+function renderProgress(){
+  renderInsightStrip();
+  renderMiniCharts();
+}
+
+function getCalData(days){
+  const today=td();
+  const result=[];
+  for(let i=days-1;i>=0;i--){
+    const d=offD(today,-i);
+    const k=U+'_'+d;
+    const log=L[k];
+    const fc=log?log.food.reduce((a,f)=>a+f.cal,0):null;
+    const ec=log?log.exercise.reduce((a,e)=>a+e.cal,0):0;
+    result.push({date:d,net:fc!==null?fc-ec:null,logged:fc!==null});
+  }
+  return result;
+}
+
+function renderInsightStrip(){
+  const el=document.getElementById('insight-text');
+  if(el)el.textContent=calcInsight().short;
+}
+
+function calcInsight(){
+  const sessions=T[U]||[];
+  const today=td();
+  const dts=wkDates(0);
+  const pdts=wkDates(-1);
+  const thisWkSess=sessions.filter(s=>dts.includes(s.date)).length;
+  const lastWkSess=sessions.filter(s=>pdts.includes(s.date)).length;
+  const calData=getCalData(14);
+  const loggedDays=calData.filter(d=>d.logged).length;
+  const tdee=getTDEE();
+  const overDays=calData.filter(d=>d.logged&&d.net>tdee).length;
+  const wa=wkAvgs();
+  const recent=wa.slice(-2);
+  if(sessions.length===0&&loggedDays===0)return{short:'Start logging to see insights',detail:'Log your food and training sessions to unlock personalised weekly insights.'};
+  const lastSess=sessions.length?sessions[sessions.length-1]:null;
+  if(lastSess){
+    const daysSince=Math.round((new Date(today)-new Date(lastSess.date+'T00:00:00'))/(1000*60*60*24));
+    if(daysSince>=5)return{short:'It\'s been '+daysSince+' days since your last session',detail:'Your last session was '+fmtD(lastSess.date)+'. Getting back on track — even a short session counts.'};
+  }
+  if(thisWkSess>lastWkSess&&lastWkSess>0)return{short:thisWkSess+' sessions this week, up from '+lastWkSess+' last week 💪',detail:'Great improvement in training frequency. Keep the momentum going into next week.'};
+  if(thisWkSess===0&&dts.indexOf(today)>1)return{short:'No sessions logged yet this week',detail:'The week is still going — even one session makes a difference to your weekly average.'};
+  if(loggedDays<7&&loggedDays>0)return{short:'Food logged '+loggedDays+' of last 14 days',detail:'Consistent logging gives you better data to work with. Try to log every day, even rough estimates count.'};
+  if(overDays>=4)return{short:'Over calorie target '+overDays+' days in the last 2 weeks',detail:'You\'ve exceeded your target on '+overDays+' of the last 14 days. Small consistent deficits work better than swings.'};
+  if(recent.length===2&&recent[0].aw&&recent[1].aw){
+    const diff=+(recent[1].aw-recent[0].aw).toFixed(1);
+    if(diff<-0.5)return{short:'Weight down '+Math.abs(diff)+'kg this week 📉',detail:'Good progress. At this rate you\'re on track toward your goal weight.'};
+    if(diff>0.5)return{short:'Weight up '+diff+'kg this week',detail:'A small gain isn\'t necessarily bad — check if calories have been higher or if training volume increased.'};
+  }
+  if(thisWkSess>=4)return{short:thisWkSess+' sessions already this week — solid week',detail:'You\'re well above average frequency this week. Make sure recovery is adequate too.'};
+  return{short:'Keep it consistent this week',detail:'Consistency over intensity — regular sessions and logged meals compound over time.'};
+}
+
+function destroyMinis(){
+  [miniBodyChart,miniCalChart,miniTrainChart,miniSigChart].forEach(c=>{if(c)c.destroy();});
+  miniBodyChart=miniCalChart=miniTrainChart=miniSigChart=null;
+}
+
+function renderMiniCharts(){
+  destroyMinis();
+  const wa=wkAvgs();
+  const tdee=getTDEE();
+  const calData=getCalData(28);
+  const today=td();
+
+  const miniOpts=(extra={})=>({
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{enabled:false}},
+    scales:{x:{display:false},y:{display:false},...(extra.scales||{})},
+    elements:{point:{radius:0},line:{borderWidth:2}},
+    animation:false,
+    ...extra
+  });
+
+  // Card 1 — Body composition: dual sparkline weight + BF%
+  const bodyCtx=document.getElementById('mini-body-chart');
+  if(bodyCtx){
+    const latest=wa.length?wa[wa.length-1]:null;
+    const prev=wa.length>=2?wa[wa.length-2]:null;
+    const valEl=document.getElementById('pg-body-val');
+    const subEl=document.getElementById('pg-body-sub');
+    if(valEl)valEl.innerHTML=latest&&latest.aw!==null?latest.aw+'<span>kg</span>':'—';
+    if(subEl){
+      const bfStr=latest&&latest.ab!==null?latest.ab+'% BF':'—';
+      const delta=latest&&prev&&latest.aw!==null&&prev.aw!==null?+(latest.aw-prev.aw).toFixed(1):null;
+      subEl.innerHTML=bfStr+(delta!==null?'<span style="margin-left:6px;color:'+(delta<=0?'#1D9E75':'#E24B4A')+'">'+(delta>0?'+':'')+delta+'kg</span>':'');
+    }
+    miniBodyChart=new Chart(bodyCtx,{
+      type:'line',
+      data:{
+        labels:wa.map(w=>w.lbl),
+        datasets:[
+          {data:wa.map(w=>w.aw),borderColor:'#1D9E75',backgroundColor:'transparent',tension:0.3,spanGaps:true,yAxisID:'y'},
+          {data:wa.map(w=>w.ab),borderColor:'#378ADD',backgroundColor:'transparent',tension:0.3,spanGaps:true,borderDash:[3,2],yAxisID:'y2'}
+        ]
+      },
+      options:miniOpts({scales:{x:{display:false},y:{display:false},y2:{display:false}}})
+    });
+  }
+
+  // Card 2 — Calories: 7-day bars + TDEE line
+  const calCtx=document.getElementById('mini-cal-chart');
+  if(calCtx){
+    const week7=getCalData(7);
+    const logged=week7.filter(d=>d.logged);
+    const avg=logged.length?Math.round(logged.reduce((a,d)=>a+d.net,0)/logged.length):null;
+    const valEl=document.getElementById('pg-cal-val');
+    const subEl=document.getElementById('pg-cal-sub');
+    if(valEl)valEl.innerHTML=avg!==null?avg+'<span>kcal</span>':'—';
+    if(subEl)subEl.textContent=avg!==null?(avg<tdee?'under target this week':'over target this week'):'no data this week';
+    miniCalChart=new Chart(calCtx,{
+      type:'bar',
+      data:{
+        labels:week7.map(d=>d.date),
+        datasets:[
+          {data:week7.map(d=>d.net),backgroundColor:week7.map(d=>d.net===null?'#e0e0e5':d.net>tdee?'#E24B4A':'#1D9E75'),borderRadius:3},
+          {data:week7.map(()=>tdee),type:'line',borderColor:'rgba(0,0,0,0.15)',borderDash:[3,2],borderWidth:1,pointRadius:0,fill:false}
+        ]
+      },
+      options:miniOpts({scales:{x:{display:false},y:{display:false}}})
+    });
+  }
+
+  // Card 3 — Training: 8-week session frequency bars
+  const trainCtx=document.getElementById('mini-train-chart');
+  if(trainCtx){
+    const allSess=T[U]||[];
+    const wkCounts=[];
+    for(let i=7;i>=0;i--){
+      const dts=wkDates(-i);
+      const count=allSess.filter(s=>dts.includes(s.date)).length;
+      wkCounts.push({lbl:wkStr(-i).split(' ')[0],count});
+    }
+    const thisWk=wkCounts[wkCounts.length-1].count;
+    const sports=allSess.filter(s=>wkDates(0).includes(s.date)||wkDates(-1).includes(s.date));
+    const sportCounts={};
+    sports.forEach(s=>{sportCounts[s.sport]=(sportCounts[s.sport]||0)+1;});
+    const topSport=Object.entries(sportCounts).sort((a,b)=>b[1]-a[1])[0];
+    const valEl=document.getElementById('pg-train-val');
+    const subEl=document.getElementById('pg-train-sub');
+    if(valEl)valEl.innerHTML=thisWk+'<span> sessions</span>';
+    if(subEl){
+      if(topSport){
+        const col=SPORT_COL[topSport[0]]||'#6B7A8D';
+        subEl.innerHTML='<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0;display:inline-block"></span>'+topSport[0]+' favoured';
+      } else subEl.textContent='this week';
+    }
+    miniTrainChart=new Chart(trainCtx,{
+      type:'bar',
+      data:{
+        labels:wkCounts.map(w=>w.lbl),
+        datasets:[{data:wkCounts.map(w=>w.count),backgroundColor:wkCounts.map((_,i)=>i===wkCounts.length-1?'#2C4A8C':'rgba(44,74,140,0.35)'),borderRadius:3}]
+      },
+      options:miniOpts({scales:{x:{display:false},y:{display:false,min:0}}})
+    });
+  }
+
+  // Card 4 — Signals: weekly deficit vs weight change dual axis
+  const sigCtx=document.getElementById('mini-sig-chart');
+  if(sigCtx){
+    const sigWa=wa.slice(-6);
+    const deficits=sigWa.map(w=>{
+      const wkD=[];
+      for(let i=0;i<7;i++){
+        const d=offD(w.key,i);
+        const k=U+'_'+d;
+        const log=L[k];
+        if(log){
+          const fc=log.food.reduce((a,f)=>a+f.cal,0);
+          const ec=log.exercise.reduce((a,e)=>a+e.cal,0);
+          wkD.push(tdee-(fc-ec));
+        }
+      }
+      return wkD.length?Math.round(wkD.reduce((a,x)=>a+x,0)/wkD.length):null;
+    });
+    const wtChanges=[];
+    for(let i=1;i<sigWa.length;i++){
+      const a=sigWa[i-1].aw,b=sigWa[i].aw;
+      wtChanges.push(a!==null&&b!==null?+(b-a).toFixed(2):null);
+    }
+    wtChanges.unshift(null);
+    // Signal verdict
+    const pairs=sigWa.map((_,i)=>({def:deficits[i],wt:wtChanges[i]})).filter(p=>p.def!==null&&p.wt!==null);
+    let verdict='—',verdictSub='not enough data';
+    if(pairs.length>=2){
+      const aligned=pairs.filter(p=>(p.def>0&&p.wt<=0)||(p.def<0&&p.wt>=0)).length;
+      const pct=Math.round(aligned/pairs.length*100);
+      if(pct>=70){verdict='Aligned';verdictSub='deficit matches loss';}
+      else if(pct>=50){verdict='Partial';verdictSub='check logging gaps';}
+      else{verdict='Mismatch';verdictSub='review calorie data';}
+    }
+    const valEl=document.getElementById('pg-sig-val');
+    const subEl=document.getElementById('pg-sig-sub');
+    if(valEl){valEl.textContent=verdict;valEl.style.color=verdict==='Aligned'?'#1D9E75':verdict==='Partial'?'#EF9F27':'#E24B4A';}
+    if(subEl)subEl.textContent=verdictSub;
+    miniSigChart=new Chart(sigCtx,{
+      type:'line',
+      data:{
+        labels:sigWa.map(w=>w.lbl),
+        datasets:[
+          {data:deficits,borderColor:'#1D9E75',backgroundColor:'transparent',tension:0.3,pointRadius:0,borderWidth:2,yAxisID:'y',spanGaps:true},
+          {data:wtChanges.map(v=>v!==null?v*-1000:null),borderColor:'#1a1a1a',backgroundColor:'transparent',tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[3,2],yAxisID:'y2',spanGaps:true}
+        ]
+      },
+      options:miniOpts({scales:{x:{display:false},y:{display:false},y2:{display:false}}})
+    });
+  }
+}
+
+function openChartOverlay(type){
+  const overlay=document.getElementById('chart-overlay');
+  const title=document.getElementById('chart-overlay-title');
+  const body=document.getElementById('chart-overlay-body');
+  if(!overlay||!title||!body)return;
+  if(overlayChart){overlayChart.destroy();overlayChart=null;}
+  if(overlayChart2){overlayChart2.destroy();overlayChart2=null;}
+  overlay.style.display='flex';
+  const wa=wkAvgs();
+  const tdee=getTDEE();
+  const fullOpts=(color,color2)=>({
+    responsive:true,maintainAspectRatio:false,animation:false,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},
+      y:{ticks:{font:{size:10},color:color||'#888'},grid:{color:'rgba(128,128,128,0.1)'}}
+    }
+  });
+
+  if(type==='body'){
+    title.textContent='Body composition';
+    const latest=wa.length?wa[wa.length-1]:null;
+    const prev=wa.length>=2?wa[wa.length-2]:null;
+    const wtDelta=latest&&prev&&latest.aw!==null&&prev.aw!==null?+(latest.aw-prev.aw).toFixed(1):null;
+    const bfDelta=latest&&prev&&latest.ab!==null&&prev.ab!==null?+(latest.ab-prev.ab).toFixed(1):null;
+    const deltaHtml=(d,unit)=>d===null?'—':(d>0?'<span style="color:#E24B4A">+'+d+unit+'</span>':'<span style="color:#1D9E75">'+d+unit+'</span>');
+    body.innerHTML=`
+      <div class="ov-stat-grid">
+        <div class="ov-stat"><div class="ov-stat-lbl">Weight</div><div class="ov-stat-val">${latest&&latest.aw!==null?latest.aw:'—'}<span>kg</span></div><div class="ov-stat-delta">${deltaHtml(wtDelta,'kg')} vs prev wk</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Body fat</div><div class="ov-stat-val">${latest&&latest.ab!==null?latest.ab:'—'}<span>%</span></div><div class="ov-stat-delta">${deltaHtml(bfDelta,'%')} vs prev wk</div></div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Weight trend — weekly avg</div>
+        <div style="position:relative;height:160px"><canvas id="ov-wt-chart"></canvas></div>
+        <div class="ov-legend" style="margin-top:.5rem">
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#1D9E75"></div>Weight (kg)</div>
+        </div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Body fat trend — weekly avg</div>
+        <div style="position:relative;height:130px"><canvas id="ov-bf-chart"></canvas></div>
+        <div class="ov-legend" style="margin-top:.5rem">
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#378ADD;border-radius:1px;border-top:2px dashed #378ADD;height:0;width:14px"></div>Body fat %</div>
+        </div>
+      </div>`;
+    setTimeout(()=>{
+      const wtCtx=document.getElementById('ov-wt-chart');
+      if(wtCtx&&wa.length)overlayChart=new Chart(wtCtx,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{data:wa.map(w=>w.aw),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',tension:0.3,pointRadius:4,pointBackgroundColor:'#1D9E75',fill:true,spanGaps:true}]},options:fullOpts('#1D9E75')});
+      const bfCtx=document.getElementById('ov-bf-chart');
+      if(bfCtx&&wa.length)overlayChart2=new Chart(bfCtx,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{data:wa.map(w=>w.ab),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',tension:0.3,pointRadius:4,pointBackgroundColor:'#378ADD',fill:true,borderDash:[4,2],spanGaps:true}]},options:fullOpts('#378ADD')});
+    },50);
+
+  } else if(type==='cals'){
+    title.textContent='Calories';
+    const calData=getCalData(28);
+    const week7=getCalData(7);
+    const logged=week7.filter(d=>d.logged);
+    const avg=logged.length?Math.round(logged.reduce((a,d)=>a+d.net,0)/logged.length):null;
+    const overDays=calData.filter(d=>d.logged&&d.net>tdee).length;
+    const underDays=calData.filter(d=>d.logged&&d.net<=tdee).length;
+    const unlogged=calData.filter(d=>!d.logged).length;
+    body.innerHTML=`
+      <div class="ov-stat-grid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="ov-stat" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center">
+          <div><div class="ov-stat-lbl">Avg this week</div><div class="ov-stat-val">${avg!==null?avg:'—'}<span>kcal</span></div></div>
+          <div style="text-align:right"><div class="ov-stat-lbl">Target</div><div class="ov-stat-val">${tdee}<span>kcal</span></div></div>
+        </div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Under</div><div class="ov-stat-val" style="color:#1D9E75">${underDays}</div><div class="ov-stat-delta" style="color:#a0a0a5">days</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Over</div><div class="ov-stat-val" style="color:#E24B4A">${overDays}</div><div class="ov-stat-delta" style="color:#a0a0a5">days</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Unlogged</div><div class="ov-stat-val">${unlogged}</div><div class="ov-stat-delta" style="color:#a0a0a5">days</div></div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Daily calories — last 28 days</div>
+        <div style="position:relative;height:160px"><canvas id="ov-cal-chart"></canvas></div>
+        <div class="ov-legend" style="margin-top:.5rem">
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#1D9E75"></div>Under target</div>
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#E24B4A"></div>Over target</div>
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#e0e0e5"></div>Unlogged</div>
+        </div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Logging consistency — last 28 days</div>
+        <div class="con-grid" style="gap:4px">${calData.map(d=>'<div class="con-dot" style="width:14px;height:14px;border-radius:3px;background:'+(d.logged?(d.net>tdee?'#E24B4A':'#1D9E75'):'#e0e0e5')+'"></div>').join('')}</div>
+      </div>`;
+    setTimeout(()=>{
+      const ctx=document.getElementById('ov-cal-chart');
+      if(ctx)overlayChart=new Chart(ctx,{type:'bar',data:{labels:calData.map(d=>d.date.slice(5)),datasets:[{data:calData.map(d=>d.net),backgroundColor:calData.map(d=>d.net===null?'#e0e0e5':d.net>tdee?'#E24B4A':'#1D9E75'),borderRadius:3},{data:calData.map(()=>tdee),type:'line',borderColor:'rgba(0,0,0,0.2)',borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false}]},options:{...fullOpts('#888'),scales:{x:{ticks:{font:{size:9},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:7},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}}}}});
+    },50);
+
+  } else if(type==='training'){
+    title.textContent='Training';
+    const allSess=T[U]||[];
+    const wkCounts=[];
+    for(let i=7;i>=0;i--){const dts=wkDates(-i);wkCounts.push({lbl:wkStr(-i).split(' - ')[0],count:allSess.filter(s=>dts.includes(s.date)).length});}
+    const sportCounts={};
+    allSess.forEach(s=>{sportCounts[s.sport]=(sportCounts[s.sport]||0)+1;});
+    const topSports=Object.entries(sportCounts).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const totalSess=allSess.length;
+    const thisWk=wkCounts[wkCounts.length-1].count;
+    const prevWk=wkCounts[wkCounts.length-2].count;
+    body.innerHTML=`
+      <div class="ov-stat-grid">
+        <div class="ov-stat"><div class="ov-stat-lbl">This week</div><div class="ov-stat-val">${thisWk}<span> sessions</span></div><div class="ov-stat-delta" style="color:${thisWk>=prevWk?'#1D9E75':'#E24B4A'}">${thisWk>=prevWk?'+':''}${thisWk-prevWk} vs prev wk</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Total logged</div><div class="ov-stat-val">${totalSess}<span> sessions</span></div><div class="ov-stat-delta" style="color:#a0a0a5">all time</div></div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Sessions per week — last 8 weeks</div>
+        <div style="position:relative;height:150px"><canvas id="ov-train-chart"></canvas></div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Sport breakdown</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:.5rem">
+          ${topSports.map(([sport,count])=>`
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="width:8px;height:8px;border-radius:50%;background:${SPORT_COL[sport]||'#6B7A8D'};flex-shrink:0"></span>
+              <span style="font-size:13px;flex:1;color:#1a1a1a">${sport.charAt(0).toUpperCase()+sport.slice(1)}</span>
+              <div style="flex:2;height:6px;background:#f2f2f7;border-radius:999px;overflow:hidden"><div style="height:100%;width:${Math.round(count/totalSess*100)}%;background:${SPORT_COL[sport]||'#6B7A8D'};border-radius:999px"></div></div>
+              <span style="font-size:12px;color:#6b6b6b;min-width:24px;text-align:right">${count}</span>
+            </div>`).join('')}
+          ${!topSports.length?'<div class="empty">No sessions logged yet</div>':''}
+        </div>
+      </div>`;
+    setTimeout(()=>{
+      const ctx=document.getElementById('ov-train-chart');
+      if(ctx)overlayChart=new Chart(ctx,{type:'bar',data:{labels:wkCounts.map(w=>w.lbl),datasets:[{data:wkCounts.map(w=>w.count),backgroundColor:wkCounts.map((_,i)=>i===wkCounts.length-1?'#2C4A8C':'rgba(44,74,140,0.4)'),borderRadius:4}]},options:{...fullOpts('#2C4A8C'),scales:{x:{ticks:{font:{size:9},color:'#888'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888',stepSize:1},grid:{color:'rgba(128,128,128,0.1)'},min:0}}}});
+    },50);
+
+  } else if(type==='signals'){
+    title.textContent='Combined signals';
+    const wa6=wa.slice(-6);
+    const deficits=wa6.map(w=>{
+      const wkD=[];
+      for(let i=0;i<7;i++){const d=offD(w.key,i);const k=U+'_'+d;const log=L[k];if(log){const fc=log.food.reduce((a,f)=>a+f.cal,0);const ec=log.exercise.reduce((a,e)=>a+e.cal,0);wkD.push(tdee-(fc-ec));}}
+      return wkD.length?Math.round(wkD.reduce((a,x)=>a+x,0)/wkD.length):null;
+    });
+    const wtChanges=[];
+    for(let i=1;i<wa6.length;i++){const a=wa6[i-1].aw,b=wa6[i].aw;wtChanges.push(a!==null&&b!==null?+(b-a).toFixed(2):null);}
+    wtChanges.unshift(null);
+    const calData28=getCalData(28);
+    const loggedPct=Math.round(calData28.filter(d=>d.logged).length/calData28.length*100);
+    const recentWa=wa.slice(-2);
+    const wtTrend=recentWa.length===2&&recentWa[0].aw&&recentWa[1].aw?+(recentWa[1].aw-recentWa[0].aw).toFixed(1):null;
+    body.innerHTML=`
+      <div class="ov-stat-grid">
+        <div class="ov-stat"><div class="ov-stat-lbl">Log consistency</div><div class="ov-stat-val">${loggedPct}<span>%</span></div><div class="ov-stat-delta" style="color:#a0a0a5">last 28 days</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Weight trend</div><div class="ov-stat-val" style="color:${wtTrend===null?'#1a1a1a':wtTrend<=0?'#1D9E75':'#E24B4A'}">${wtTrend!==null?(wtTrend>0?'+':'')+wtTrend+'kg':'—'}</div><div class="ov-stat-delta" style="color:#a0a0a5">this vs prev wk</div></div>
+      </div>
+      <div class="ov-chart-wrap">
+        <div class="ov-chart-title">Weekly deficit vs weight change</div>
+        <div style="position:relative;height:160px"><canvas id="ov-sig-chart"></canvas></div>
+        <div class="ov-legend" style="margin-top:.5rem">
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#1D9E75"></div>Avg deficit (kcal)</div>
+          <div class="ov-legend-item"><div class="ov-legend-dot" style="background:#1a1a1a"></div>Weight change (g, inverted)</div>
+        </div>
+      </div>`;
+    setTimeout(()=>{
+      const ctx=document.getElementById('ov-sig-chart');
+      if(ctx)overlayChart=new Chart(ctx,{type:'line',data:{labels:wa6.map(w=>w.lbl),datasets:[{label:'Deficit',data:deficits,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.07)',tension:0.3,pointRadius:4,pointBackgroundColor:'#1D9E75',fill:true,spanGaps:true,yAxisID:'y'},{label:'Wt change',data:wtChanges.map(v=>v!==null?v*-1000:null),borderColor:'#1a1a1a',backgroundColor:'transparent',tension:0.3,pointRadius:4,pointBackgroundColor:'#1a1a1a',borderDash:[4,2],spanGaps:true,yAxisID:'y2'}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},y:{ticks:{font:{size:10},color:'#1D9E75'},grid:{color:'rgba(128,128,128,0.1)'},title:{display:true,text:'kcal deficit',font:{size:9},color:'#888'}},y2:{position:'right',ticks:{font:{size:10},color:'#888'},grid:{display:false},title:{display:true,text:'weight loss (g)',font:{size:9},color:'#888'}}}}});
+    },50);
+  }
+  if(typeof lucide!=='undefined')lucide.createIcons();
+}
+
+function closeChartOverlay(){
+  document.getElementById('chart-overlay').style.display='none';
+  if(overlayChart){overlayChart.destroy();overlayChart=null;}
+  if(overlayChart2){overlayChart2.destroy();overlayChart2=null;}
+}
 
 function renderProgress(){
   renderInsightStrip();
