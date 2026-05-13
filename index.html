@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-</head>
+<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -10,6 +9,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#1D9E75">
   <title>FitTrack</title>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;background:#f2f2f7;padding:1rem 0 80px;-webkit-tap-highlight-color:transparent}
@@ -605,7 +605,7 @@ async function pullFromSheet(){
     localStorage.setItem('ft_wC',JSON.stringify(W));
     localStorage.setItem('ft_tC',JSON.stringify(T));
     localStorage.setItem('ft_eC',JSON.stringify(EL));
-    loadP(P[U]);calc();renderLog();renderWt();renderHome();buildDD();
+    loadP(P[U]);calc();renderHome();buildDD();
     const now=new Date().toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
     setSyncNote('Loaded at '+now,'#1D9E75');
   }catch(e){setSyncNote('Load failed — check connection','#E24B4A');}
@@ -1281,207 +1281,6 @@ function closeChartOverlay(){
   if(overlayChart2){overlayChart2.destroy();overlayChart2=null;}
 }
 
-function renderProgress(){
-  renderInsightStrip();
-  renderMiniCharts();
-  renderCombinedSignals();
-}
-
-function getCalData(days){
-  const today=td();
-  const result=[];
-  for(let i=days-1;i>=0;i--){
-    const d=offD(today,-i);
-    const k=U+'_'+d;
-    const log=L[k];
-    const fc=log?log.food.reduce((a,f)=>a+f.cal,0):null;
-    const ec=log?log.exercise.reduce((a,e)=>a+e.cal,0):0;
-    result.push({date:d,net:fc!==null?fc-ec:null,logged:fc!==null});
-  }
-  return result;
-}
-
-function renderInsightStrip(){
-  const el=document.getElementById('insight-text');
-  if(!el)return;
-  const insight=calcInsight();
-  el.textContent=insight.short;
-}
-
-function calcInsight(){
-  const sessions=T[U]||[];
-  const today=td();
-  const dts=wkDates(0);
-  const pdts=wkDates(-1);
-  const thisWkSess=sessions.filter(s=>dts.includes(s.date)).length;
-  const lastWkSess=sessions.filter(s=>pdts.includes(s.date)).length;
-  const calData=getCalData(14);
-  const loggedDays=calData.filter(d=>d.logged).length;
-  const tdee=getTDEE();
-  const overDays=calData.filter(d=>d.logged&&d.net>tdee).length;
-  const wa=wkAvgs();
-  const recent=wa.slice(-2);
-
-  if(sessions.length===0&&loggedDays===0)return{short:'Start logging to see insights',detail:'Log your food and training sessions to unlock personalised weekly insights.'};
-
-  const lastSess=sessions.length?sessions[sessions.length-1]:null;
-  if(lastSess){
-    const daysSince=Math.round((new Date(today)-new Date(lastSess.date+'T00:00:00'))/(1000*60*60*24));
-    if(daysSince>=5)return{short:'It\'s been '+daysSince+' days since your last session',detail:'Your last session was '+fmtD(lastSess.date)+'. Getting back on track — even a short session counts.'};
-  }
-  if(thisWkSess>lastWkSess&&lastWkSess>0)return{short:thisWkSess+' sessions this week, up from '+lastWkSess+' last week 💪',detail:'Great improvement in training frequency. Keep the momentum going into next week.'};
-  if(thisWkSess===0&&dts.indexOf(today)>1)return{short:'No sessions logged yet this week',detail:'The week is still going — even one session makes a difference to your weekly average.'};
-  if(loggedDays<7&&loggedDays>0)return{short:'Food logged '+loggedDays+' of last 14 days',detail:'Consistent logging gives you better data to work with. Try to log every day, even rough estimates count.'};
-  if(overDays>=4)return{short:'Over calorie target '+overDays+' days in the last 2 weeks',detail:'You\'ve exceeded your target on '+overDays+' of the last 14 days. A small consistent deficit tends to work better than strict days followed by over-eating.'};
-  if(recent.length===2&&recent[0].aw&&recent[1].aw){
-    const diff=+(recent[1].aw-recent[0].aw).toFixed(1);
-    if(diff<-0.5)return{short:'Weight down '+Math.abs(diff)+'kg this week 📉',detail:'Good progress. At this rate you\'re on track toward your goal weight.'};
-    if(diff>0.5)return{short:'Weight up '+diff+'kg this week',detail:'A small gain isn\'t necessarily bad — check if calories have been higher or if training volume increased.'};
-  }
-  if(thisWkSess>=4)return{short:thisWkSess+' sessions already this week — solid week',detail:'You\'re well above average frequency this week. Make sure recovery is adequate too.'};
-  return{short:'Keep it consistent this week',detail:'Consistency over intensity — regular sessions and logged meals compound over time.'};
-}
-
-function renderMiniCharts(){
-  const wa=wkAvgs();
-  const tdee=getTDEE();
-  const calData=getCalData(28);
-  const chartOpts=(color)=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false}},elements:{point:{radius:0},line:{borderWidth:2}}});
-
-  if(wa.length>=2){
-    const latest=wa[wa.length-1];
-    const prev=wa[wa.length-2];
-    if(miniWtChart)miniWtChart.destroy();
-    const wtCtx=document.getElementById('mini-wt-chart');
-    if(wtCtx){
-      miniWtChart=new Chart(wtCtx,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{data:wa.map(w=>w.aw),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.3,spanGaps:true}]},options:chartOpts('#1D9E75')});
-      const sub=document.getElementById('pg-wt-sub');
-      if(sub)sub.textContent=latest.aw!==null?latest.aw+'kg':'--';
-    }
-    if(miniBfChart)miniBfChart.destroy();
-    const bfCtx=document.getElementById('mini-bf-chart');
-    if(bfCtx){
-      miniBfChart=new Chart(bfCtx,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{data:wa.map(w=>w.ab),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,spanGaps:true}]},options:chartOpts('#378ADD')});
-      const sub=document.getElementById('pg-bf-sub');
-      if(sub)sub.textContent=latest.ab!==null?latest.ab+'%':'--';
-    }
-  } else {
-    const ws=document.getElementById('pg-wt-sub');if(ws)ws.textContent='--';
-    const bs=document.getElementById('pg-bf-sub');if(bs)bs.textContent='--';
-  }
-
-  const loggedCal=calData.filter(d=>d.logged);
-  if(miniCalChart)miniCalChart.destroy();
-  const calCtx=document.getElementById('mini-cal-chart');
-  if(calCtx&&loggedCal.length){
-    const avgNet=Math.round(loggedCal.reduce((a,d)=>a+d.net,0)/loggedCal.length);
-    miniCalChart=new Chart(calCtx,{type:'bar',data:{labels:calData.map(d=>d.date),datasets:[{data:calData.map(d=>d.net),backgroundColor:calData.map(d=>d.net===null?'#e0e0e5':d.net>tdee?'#E24B4A':'#1D9E75'),borderRadius:2}]},options:{...chartOpts('#1D9E75'),scales:{x:{display:false},y:{display:false}}}});
-    const sub=document.getElementById('pg-cal-sub');
-    if(sub)sub.textContent='avg '+avgNet+' kcal';
-  } else {
-    const cs=document.getElementById('pg-cal-sub');if(cs)cs.textContent='--';
-  }
-
-  const conEl=document.getElementById('mini-consistency');
-  const conSub=document.getElementById('pg-con-sub');
-  if(conEl){
-    const dots=calData.slice(-28);
-    const pct=Math.round(dots.filter(d=>d.logged).length/dots.length*100);
-    conEl.innerHTML='<div class="con-grid">'+dots.map(d=>'<div class="con-dot" style="background:'+(d.logged?(d.net>tdee?'#E24B4A':'#1D9E75'):'#e0e0e5')+'"></div>').join('')+'</div>';
-    if(conSub)conSub.textContent=pct+'% logged';
-  }
-}
-
-function renderCombinedSignals(){
-  const wa=wkAvgs();
-  const tdee=getTDEE();
-  const calData=getCalData(28);
-
-  const sigWtCal=document.getElementById('sig-wt-cal-val');
-  if(sigWtCal&&wa.length>=2){
-    const recent=wa.slice(-4);
-    const wtChange=recent.length>=2&&recent[0].aw&&recent[recent.length-1].aw?+(recent[recent.length-1].aw-recent[0].aw).toFixed(1):null;
-    const loggedCal=calData.filter(d=>d.logged);
-    const avgNet=loggedCal.length?Math.round(loggedCal.reduce((a,d)=>a+d.net,0)/loggedCal.length):null;
-    if(wtChange!==null&&avgNet!==null){
-      const deficit=tdee-avgNet;
-      const expectedLoss=+(deficit*28/7700).toFixed(1);
-      const actual=+Math.abs(wtChange).toFixed(1);
-      const match=Math.abs(expectedLoss-actual)<0.5;
-      sigWtCal.textContent=match?'Your logging matches your weight change well — data looks accurate.':wtChange<0&&deficit>0?'Losing weight as expected from your calorie deficit.':wtChange>0&&avgNet>tdee?'Weight gain aligns with calorie surplus logged.':'Weight change doesn\'t match calories logged — some days may be unlogged.';
-    } else sigWtCal.textContent='Log more data to see this signal.';
-  } else if(sigWtCal) sigWtCal.textContent='Log more data to see this signal.';
-
-  const sigConWt=document.getElementById('sig-con-wt-val');
-  if(sigConWt&&wa.length>=2){
-    const loggedDays=calData.filter(d=>d.logged).length;
-    const pct=Math.round(loggedDays/calData.length*100);
-    const recent=wa.slice(-2);
-    const wtTrend=recent.length===2&&recent[0].aw&&recent[1].aw?recent[1].aw-recent[0].aw:null;
-    if(pct>=80&&wtTrend!==null)sigConWt.textContent=wtTrend<=0?'High logging consistency ('+pct+'%) — and weight is moving in the right direction.':'High logging consistency ('+pct+'%) but weight trending up — check portion sizes.';
-    else if(pct<50)sigConWt.textContent='Low logging consistency ('+pct+'%) makes it hard to draw conclusions. Try logging more days.';
-    else sigConWt.textContent='Moderate consistency ('+pct+'%). More logged days will give clearer signals.';
-  } else if(sigConWt) sigConWt.textContent='Log more data to see this signal.';
-}
-
-function openChartOverlay(type){
-  const overlay=document.getElementById('chart-overlay');
-  const title=document.getElementById('chart-overlay-title');
-  const body=document.getElementById('chart-overlay-body');
-  if(!overlay||!title||!body)return;
-  overlay.style.display='flex';
-  if(overlayChart){overlayChart.destroy();overlayChart=null;}
-  const wa=wkAvgs();
-  const tdee=getTDEE();
-
-  if(type==='weight'){
-    title.textContent='Weight trend';
-    body.innerHTML='<div style="padding:1rem 1.25rem"><div style="position:relative;height:200px;margin-bottom:1rem"><canvas id="ov-chart"></canvas></div><div style="font-size:12px;color:#6b6b6b;text-align:center">Weekly averages — kg</div></div>';
-    setTimeout(()=>{const ctx=document.getElementById('ov-chart');if(ctx&&wa.length)overlayChart=new Chart(ctx,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{label:'Weight',data:wa.map(w=>w.aw),borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.3,pointRadius:4,pointBackgroundColor:'#1D9E75',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},y:{ticks:{font:{size:10},color:'#1D9E75'},grid:{color:'rgba(128,128,128,0.1)'}}}}});},50);
-  } else if(type==='bf'){
-    title.textContent='Body fat trend';
-    body.innerHTML='<div style="padding:1rem 1.25rem"><div style="position:relative;height:200px;margin-bottom:1rem"><canvas id="ov-chart"></canvas></div><div style="font-size:12px;color:#6b6b6b;text-align:center">Weekly averages — %</div></div>';
-    setTimeout(()=>{const ctx=document.getElementById('ov-chart');if(ctx&&wa.length)overlayChart=new Chart(ctx,{type:'line',data:{labels:wa.map(w=>w.lbl),datasets:[{label:'Body fat',data:wa.map(w=>w.ab),borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.3,pointRadius:4,pointBackgroundColor:'#378ADD',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},y:{ticks:{font:{size:10},color:'#378ADD'},grid:{color:'rgba(128,128,128,0.1)'}}}}});},50);
-  } else if(type==='cals'){
-    title.textContent='Daily calories';
-    const calData=getCalData(28);
-    body.innerHTML='<div style="padding:1rem 1.25rem"><div style="position:relative;height:200px;margin-bottom:1rem"><canvas id="ov-chart"></canvas></div><div style="font-size:12px;color:#6b6b6b;text-align:center">Net calories vs target (last 28 days)</div></div>';
-    setTimeout(()=>{const ctx=document.getElementById('ov-chart');if(ctx)overlayChart=new Chart(ctx,{type:'bar',data:{labels:calData.map(d=>d.date.slice(5)),datasets:[{data:calData.map(d=>d.net),backgroundColor:calData.map(d=>d.net===null?'#e0e0e5':d.net>tdee?'#E24B4A':'#1D9E75'),borderRadius:3},{data:calData.map(()=>tdee),type:'line',borderColor:'rgba(0,0,0,0.2)',borderDash:[4,4],borderWidth:1,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:9},color:'#888',maxRotation:0,autoSkip:true,maxTicksLimit:7},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}}}}});},50);
-  } else if(type==='consistency'){
-    title.textContent='Logging consistency';
-    const calData=getCalData(56);
-    const loggedDays=calData.filter(d=>d.logged).length;
-    const overDays=calData.filter(d=>d.logged&&d.net>tdee).length;
-    const underDays=calData.filter(d=>d.logged&&d.net<=tdee).length;
-    body.innerHTML='<div style="padding:1rem 1.25rem">'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem">'
-      +'<div class="hstat"><div class="hstat-lbl">Logged</div><div class="hstat-val">'+loggedDays+'</div><div class="hstat-sub tfl">of '+calData.length+' days</div></div>'
-      +'<div class="hstat"><div class="hstat-lbl">Under target</div><div class="hstat-val tdn">'+underDays+'</div><div class="hstat-sub tfl">days</div></div>'
-      +'<div class="hstat"><div class="hstat-lbl">Over target</div><div class="hstat-val tup">'+overDays+'</div><div class="hstat-sub tfl">days</div></div>'
-      +'</div>'
-      +'<div class="ctitle">Last 8 weeks</div>'
-      +'<div class="con-grid" style="gap:4px">'+calData.map(d=>'<div class="con-dot" style="width:14px;height:14px;border-radius:3px;background:'+(d.logged?(d.net>tdee?'#E24B4A':'#1D9E75'):'#e0e0e5')+'" title="'+d.date+'"></div>').join('')+'</div>'
-      +'<div style="display:flex;gap:12px;margin-top:.75rem">'
-      +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b6b6b"><div style="width:10px;height:10px;border-radius:2px;background:#1D9E75"></div>Under</div>'
-      +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b6b6b"><div style="width:10px;height:10px;border-radius:2px;background:#E24B4A"></div>Over</div>'
-      +'<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#6b6b6b"><div style="width:10px;height:10px;border-radius:2px;background:#e0e0e5"></div>Not logged</div>'
-      +'</div></div>';
-  }
-  if(typeof lucide!=='undefined')lucide.createIcons();
-}
-function closeChartOverlay(){document.getElementById('chart-overlay').style.display='none';if(overlayChart){overlayChart.destroy();overlayChart=null;}}
-
-function openInsightOverlay(){
-  const overlay=document.getElementById('insight-overlay');
-  const body=document.getElementById('insight-overlay-body');
-  if(!overlay||!body)return;
-  const insight=calcInsight();
-  body.innerHTML='<p style="font-size:15px;font-weight:500;margin-bottom:.75rem">'+insight.short+'</p><p style="font-size:14px;color:#6b6b6b;line-height:1.6">'+insight.detail+'</p>';
-  overlay.style.display='flex';
-  if(typeof lucide!=='undefined')lucide.createIcons();
-}
-function closeInsightOverlay(){document.getElementById('insight-overlay').style.display='none';}
-
 function openStatsModal(){
   document.getElementById('stats-modal').style.display='flex';
   swStatsTab('gym');
@@ -1603,44 +1402,6 @@ function renderCardioStats(){
         }
       }
     });
-  }
-}
-  const sessions=(T[U]||[]).filter(s=>s.sport!=='gym');
-  const bests={};
-  const wkDist={};
-  sessions.forEach(s=>{
-    if(!bests[s.sport])bests[s.sport]={dur:0,dist:0,pace:null};
-    if(s.duration&&s.duration>bests[s.sport].dur)bests[s.sport].dur=s.duration;
-    if(s.distance&&s.distance>bests[s.sport].dist)bests[s.sport].dist=s.distance;
-    if(s.distance&&s.duration&&s.sport!=='swim'){
-      const pace=s.duration/s.distance;
-      if(!bests[s.sport].pace||pace<bests[s.sport].pace)bests[s.sport].pace=pace;
-    }
-    if(s.distance){
-      const d=new Date(s.date+'T00:00:00'),day=d.getDay(),m=new Date(d);
-      m.setDate(d.getDate()-(day===0?6:day-1));
-      const k=m.getFullYear()+'-'+S2(m.getMonth()+1)+'-'+S2(m.getDate());
-      if(!wkDist[k])wkDist[k]={lbl:m.toLocaleDateString('en-MY',{day:'numeric',month:'short'}),dist:0};
-      wkDist[k].dist+=s.distance;
-    }
-  });
-  const el=document.getElementById('sm-cardio-bests');
-  if(el){
-    const entries=Object.entries(bests);
-    el.innerHTML=entries.length?entries.map(([sport,b])=>{
-      const col=sportColor(sport);
-      let detail='';
-      if(b.dist)detail+=(sport==='swim'?b.dist+'m':b.dist+'km')+' longest';
-      if(b.dur)detail+=(detail?' / ':'')+b.dur+'min longest';
-      if(b.pace)detail+=(detail?' / ':'')+b.pace.toFixed(1)+' min/km best pace';
-      return'<div class="cardio-best-row"><div style="display:flex;align-items:center;gap:8px"><div style="width:10px;height:10px;border-radius:50%;background:'+col+'"></div><div class="pr-name">'+sport.charAt(0).toUpperCase()+sport.slice(1)+'</div></div><div style="font-size:12px;color:#6b6b6b;text-align:right">'+detail+'</div></div>';
-    }).join(''):'<div class="empty">No cardio sessions logged yet</div>';
-  }
-  const wkArr=Object.entries(wkDist).sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
-  if(cardioDistChart)cardioDistChart.destroy();
-  const ctx=document.getElementById('cardio-dist-chart');
-  if(ctx&&wkArr.length){
-    cardioDistChart=new Chart(ctx,{type:'bar',data:{labels:wkArr.map(w=>w[1].lbl),datasets:[{data:wkArr.map(w=>w[1].dist),backgroundColor:'#E8A020',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'},title:{display:true,text:'km / m',font:{size:10},color:'#888'}}}}});
   }
 }
 
