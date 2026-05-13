@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,14 +132,15 @@
     .snav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:0.5px solid #e0e0e5;z-index:99;padding-bottom:env(safe-area-inset-bottom)}
     .snav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:none;background:transparent;color:#a0a0a5;cursor:pointer}
     .snav-btn.on{color:#1a1a1a}
-    .snav-icon{font-size:20px;line-height:1}
+    .snav-btn i{width:20px;height:20px;stroke:currentColor}
     .snav-lbl{font-size:10px;font-weight:500}
+    .qsq i{width:22px;height:22px;stroke:#1a1a1a;stroke-width:1.75}
+    .qsq{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 4px;border:0.5px solid #e0e0e5;border-radius:14px;background:#fff;cursor:pointer}
+    .hbg i{width:22px;height:22px;stroke:#1a1a1a}
     .wknav{background:none;border:0.5px solid #c7c7cc;border-radius:6px;padding:2px 10px;font-size:16px;color:#6b6b6b;cursor:pointer;line-height:1.4}
     .wknav:disabled{opacity:.3;cursor:default}
     .qrow{display:flex;gap:8px;margin-bottom:1rem}
     .qsq{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border:0.5px solid #e0e0e5;border-radius:14px;background:#fff;cursor:pointer}
-    .qsq-icon{font-size:22px;line-height:1}
-    .qsq-lbl{font-size:11px;font-weight:500;color:#1a1a1a}
     .hbg{background:none;border:none;font-size:22px;color:#1a1a1a;cursor:pointer;padding:4px 8px;line-height:1}
     .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:100}
     .drawer-overlay.on{display:block}
@@ -184,42 +186,42 @@
   </div>
   <div class="drawer-section">
     <div class="drawer-label">Data</div>
-    <button class="drawer-btn" onclick="pullFromSheet();closeDrawer()">&#8595; Load latest</button>
-    <button class="drawer-btn green" onclick="pushToSheet();closeDrawer()">&#8593; Save &amp; sync</button>
+    <button class="drawer-btn" onclick="pullFromSheet();closeDrawer()"><i data-lucide="download" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Load latest</button>
+    <button class="drawer-btn green" onclick="pushToSheet();closeDrawer()"><i data-lucide="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Save &amp; sync</button>
     <div class="sync-note" id="sync-note">—</div>
   </div>
   <div class="drawer-section">
-    <button class="drawer-btn" onclick="goPage('profile');closeDrawer()">&#128100; Profile settings</button>
+    <button class="drawer-btn" onclick="goPage('profile');closeDrawer()"><i data-lucide="user" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"></i>Profile settings</button>
   </div>
 </div>
-<div class="nav">
-  <button class="on" onclick="goPage('home')">Home</button>
-  <button onclick="goPage('daily')">Daily</button>
-  <button onclick="goPage('weight')">Weight</button>
-  <button onclick="goPage('training')">Training</button>
-  <button onclick="goPage('profile')">Profile</button>
-</div>
+
 
 <!-- HOME -->
 <div id="pg-home" class="pg on">
   <div style="font-size:22px;font-weight:500;margin-bottom:4px" id="h-greet">Good morning, Sam</div>
   <div style="font-size:13px;color:#6b6b6b;margin-bottom:1rem" id="h-date2"></div>
 
-  <!-- Quick log buttons -->
+<!-- Quick log buttons -->
   <div class="qrow">
-    <button class="qsq" onclick="goPage('daily');swTab('food')"><span class="qsq-icon">&#127869;</span><span class="qsq-lbl">Food</span></button>
-    <button class="qsq" onclick="goTraining()"><span class="qsq-icon">&#128170;</span><span class="qsq-lbl">Train</span></button>
-    <button class="qsq" onclick="goPage('weight')"><span class="qsq-icon">&#9878;</span><span class="qsq-lbl">Weight</span></button>
-    <button class="qsq" onclick="goPage('daily');swTab('exercise')"><span class="qsq-icon">&#128293;</span><span class="qsq-lbl">Calories</span></button>
+    <button class="qsq" onclick="goPage('daily');swTab('food')" title="Log food"><i data-lucide="utensils"></i></button>
+    <button class="qsq" onclick="goTraining()" title="Log training"><i data-lucide="dumbbell"></i></button>
+    <button class="qsq" onclick="goPage('weight')" title="Log weight"><i data-lucide="scale"></i></button>
+    <button class="qsq" onclick="goPage('daily');swTab('exercise')" title="Log calories"><i data-lucide="flame"></i></button>
   </div>
 
-  <!-- This week stats -->
+<!-- This week stats -->
   <div class="card">
-    <div class="ctitle">This week</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div class="ctitle" style="margin-bottom:0" id="hstat-title">This week</div>
+      <div style="display:flex;gap:4px">
+        <button class="wknav" id="hstat-prev" onclick="chHStat(-1)">&#8249;</button>
+        <button class="wknav" id="hstat-next" onclick="chHStat(1)" disabled>&#8250;</button>
+      </div>
+    </div>
     <div class="hstats">
       <div class="hstat"><div class="hstat-lbl">Avg weight</div><div class="hstat-val" id="h-wt">—</div><div class="hstat-sub" id="h-wt-tr"></div></div>
       <div class="hstat"><div class="hstat-lbl">Body fat</div><div class="hstat-val" id="h-bf2">—</div><div class="hstat-sub" id="h-bf-tr"></div></div>
-      <div class="hstat"><div class="hstat-lbl">Sessions</div><div class="hstat-val" id="h-sess">0</div><div class="hstat-sub tfl">this week</div></div>
+      <div class="hstat"><div class="hstat-lbl">Sessions</div><div class="hstat-val" id="h-sess">0</div><div class="hstat-sub tfl" id="h-sess-sub">this week</div></div>
     </div>
   </div>
 
@@ -278,11 +280,11 @@
 
 <!-- STICKY NAV -->
 <div class="snav">
-  <button onclick="goPage('home')" id="snav-home" class="snav-btn on"><span class="snav-icon">&#127968;</span><span class="snav-lbl">Home</span></button>
-  <button onclick="goPage('daily')" id="snav-daily" class="snav-btn"><span class="snav-icon">&#128197;</span><span class="snav-lbl">Daily</span></button>
-  <button onclick="goPage('weight')" id="snav-weight" class="snav-btn"><span class="snav-icon">&#9878;</span><span class="snav-lbl">Weight</span></button>
-  <button onclick="goPage('training')" id="snav-training" class="snav-btn"><span class="snav-icon">&#128170;</span><span class="snav-lbl">Train</span></button>
-  <button onclick="goPage('profile')" id="snav-profile" class="snav-btn"><span class="snav-icon">&#128100;</span><span class="snav-lbl">Profile</span></button>
+  <button onclick="goPage('home')" id="snav-home" class="snav-btn on"><i data-lucide="house"></i><span class="snav-lbl">Home</span></button>
+  <button onclick="goPage('daily')" id="snav-daily" class="snav-btn"><i data-lucide="calendar-days"></i><span class="snav-lbl">Daily</span></button>
+  <button onclick="goPage('weight')" id="snav-weight" class="snav-btn"><i data-lucide="scale"></i><span class="snav-lbl">Weight</span></button>
+  <button onclick="goPage('training')" id="snav-training" class="snav-btn"><i data-lucide="dumbbell"></i><span class="snav-lbl">Train</span></button>
+  <button onclick="goPage('profile')" id="snav-profile" class="snav-btn"><i data-lucide="user"></i><span class="snav-lbl">Profile</span></button>
 </div>
 
 <!-- DAILY -->
@@ -389,11 +391,12 @@
       <span id="sdlbl" style="font-size:14px;font-weight:500">—</span>
       <button id="sn" onclick="chSess(1)">&#8250;</button>
     </div>
-    <div class="spills" id="sport-pills">
+<div class="spills" id="sport-pills">
       <button class="spill on" onclick="selSport('gym',this)">Gym</button>
       <button class="spill" onclick="selSport('run',this)">Run</button>
       <button class="spill" onclick="selSport('swim',this)">Swim</button>
       <button class="spill" onclick="selSport('cycle',this)">Cycle</button>
+      <button class="spill" onclick="selSport('walk',this)">Walk</button>
       <button class="spill" onclick="selSport('other',this)">Other</button>
     </div>
     <div id="sp-gym">
@@ -552,7 +555,7 @@ function goPage(p){
   if(p==='weight')renderWt();
   if(p==='training')renderTrain();
 }
-function swUser(u){saveP(U);U=u;loadP(P[U]);updDrawerSw();cards=[];wBarOff=0;stampOff=0;renderCards();calc();renderLog();renderWt();renderHome();}
+function swUser(u){saveP(U);U=u;loadP(P[U]);updDrawerSw();cards=[];wBarOff=0;stampOff=0;hStatOff=0;renderCards();calc();renderLog();renderWt();renderHome();}
 function swTab(t){document.getElementById('t-food').style.display=t==='food'?'block':'none';document.getElementById('t-ex').style.display=t==='exercise'?'block':'none';document.querySelectorAll('#daily-tabs button').forEach((b,i)=>b.classList.toggle('on',(i===0&&t==='food')||(i===1&&t==='exercise')));}
 function swTrain(t){document.getElementById('tr-log').style.display=t==='log'?'block':'none';document.getElementById('tr-history').style.display=t==='history'?'block':'none';document.querySelectorAll('#train-tabs button').forEach((b,i)=>b.classList.toggle('on',(i===0&&t==='log')||(i===1&&t==='history')));if(t==='history')renderHist();}
 function selSport(s,btn){sport=s;document.querySelectorAll('#sport-pills .spill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('sp-gym').style.display=s==='gym'?'block':'none';document.getElementById('sp-cardio').style.display=s!=='gym'?'block':'none';if(s!=='gym'){buildCFields(s);showLast(s);}}
@@ -792,6 +795,29 @@ function jumpToDate(d){
   updDUI();
   renderLog();
 }
+let hStatOff=0;
+function chHStat(n){const nw=hStatOff+n;if(nw>0)return;hStatOff=nw;renderHStats();}
+function renderHStats(){
+  const isThisWk=hStatOff===0;
+  const title=document.getElementById('hstat-title');
+  if(title)title.textContent=isThisWk?'This week':wkStr(hStatOff);
+  const nxt=document.getElementById('hstat-next');
+  if(nxt)nxt.disabled=hStatOff>=0;
+  const ul=W[U]||[],dts=wkDates(hStatOff),pdts=wkDates(hStatOff-1);
+  const tw=ul.filter(e=>dts.includes(e.date)),pw=ul.filter(e=>pdts.includes(e.date));
+  const avg=arr=>{const v=arr.filter(e=>e.weight);return v.length?+(v.reduce((a,e)=>a+e.weight,0)/v.length).toFixed(1):null;};
+  const abf=arr=>{const v=arr.filter(e=>e.bf);return v.length?+(v.reduce((a,e)=>a+e.bf,0)/v.length).toFixed(1):null;};
+  const cw=avg(tw),pw2=avg(pw),cb=abf(tw),pb=abf(pw);
+  document.getElementById('h-wt').innerHTML=cw!==null?cw+'<span class="hstat-unit">kg</span>':'--';
+  document.getElementById('h-bf2').innerHTML=cb!==null?cb+'<span class="hstat-unit">%</span>':'--';
+  const tH=(c,p,lb)=>{if(c===null||p===null)return'<span class="tfl">no data</span>';const d=+(c-p).toFixed(1),b=lb?d<0:d>0;return'<span class="'+(d===0?'tfl':b?'tdn':'tup')+'">'+(d>0?'+':'')+d+' vs prev wk</span>';};
+  document.getElementById('h-wt-tr').innerHTML=tH(cw,pw2,true);
+  document.getElementById('h-bf-tr').innerHTML=tH(cb,pb,true);
+  const trainedDates=new Set((T[U]||[]).map(s=>s.date));
+  const sessCount=dts.filter(d=>trainedDates.has(d)).length;
+  document.getElementById('h-sess').textContent=sessCount;
+  document.getElementById('h-sess-sub').textContent=isThisWk?'this week':wkStr(hStatOff);
+}
 function renderHome(){
   const name=U.charAt(0).toUpperCase()+U.slice(1);
   document.getElementById('h-greet').textContent=greet()+', '+name;
@@ -802,18 +828,7 @@ function renderHome(){
   const re=document.getElementById('h-rem');re.textContent=rem;re.className='cal-hval'+(rem<0?' red':' grn');
   const bar=document.getElementById('h-bar');bar.style.width=Math.max(0,pct).toFixed(1)+'%';bar.className='hbar-fill'+(net>tdee?' red':net>tdee*0.85?' amb':'');
   document.getElementById('h-bl').textContent=net+' kcal net';document.getElementById('h-br').textContent='of '+tdee+' kcal target';
-  const ul=W[U]||[],dts=wkDates(0),pdts=wkDates(-1);
-  const tw=ul.filter(e=>dts.includes(e.date)),pw=ul.filter(e=>pdts.includes(e.date));
-  const avg=arr=>{const v=arr.filter(e=>e.weight);return v.length?+(v.reduce((a,e)=>a+e.weight,0)/v.length).toFixed(1):null;};
-  const abf=arr=>{const v=arr.filter(e=>e.bf);return v.length?+(v.reduce((a,e)=>a+e.bf,0)/v.length).toFixed(1):null;};
-  const cw=avg(tw),pw2=avg(pw),cb=abf(tw),pb=abf(pw);
-  document.getElementById('h-wt').innerHTML=cw!==null?cw+'<span class="hstat-unit">kg</span>':'--';
-  document.getElementById('h-bf2').innerHTML=cb!==null?cb+'<span class="hstat-unit">%</span>':'--';
-  const tH=(c,p,lb)=>{if(c===null||p===null)return'<span class="tfl">no data</span>';const d=+(c-p).toFixed(1),b=lb?d<0:d>0;return'<span class="'+(d===0?'tfl':b?'tdn':'tup')+'">'+(d>0?'+':'')+d+' vs last wk</span>';};
-  document.getElementById('h-wt-tr').innerHTML=tH(cw,pw2,true);document.getElementById('h-bf-tr').innerHTML=tH(cb,pb,true);
-  const trainedDates=new Set((T[U]||[]).map(s=>s.date));
-  const dts2=wkDates(0);
-  document.getElementById('h-sess').textContent=dts2.filter(d=>trainedDates.has(d)).length;
+  renderHStats();
   renderWeekBars();
   renderStampCal();
 }
@@ -824,7 +839,7 @@ function updDrawerSw(){document.getElementById('dsw-sam').classList.toggle('on',
 loadP(P[U]);calc();updDUI();
 document.getElementById('sdlbl').textContent=dlbl(sDate);
 document.getElementById('wdate').value=td();
-buildDD();renderHome();
+buildDD();renderHome();if(typeof lucide!=='undefined')lucide.createIcons();
 </script>
 </body>
 </html>
