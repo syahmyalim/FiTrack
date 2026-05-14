@@ -24,7 +24,7 @@ body{
   justify-content:center;min-height:100vh;padding:2rem;background:#f2f2f7;
 }
 #main-app{display:none}
-#main-app.visible{display:block}
+#main-app.on { display: block }
 
 .login-logo{font-size:36px;font-weight:700;color:#1D9E75;margin-bottom:6px;letter-spacing:-1px}
 .login-sub{font-size:14px;color:#6b6b6b;margin-bottom:2.5rem}
