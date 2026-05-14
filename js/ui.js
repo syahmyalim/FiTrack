@@ -1333,8 +1333,14 @@ const UI = (() => {
       target_weeks:     $("tgwk")?.value || null
     };
     saveProfile(fields);
-    _showToast("✓ Profile saved!");
-    renderCalBar();
+
+    // Show toast first — before anything that could throw
+    _showToast("\u2713 Profile saved!");
+
+    // renderCalBar touches home-page elements (h-bar, h-eaten etc.) that
+    // don't exist on the profile page. Wrap in try/catch so a missing
+    // element never crashes the call and swallows the toast.
+    try { renderCalBar(); } catch (e) { /* not on home page — safe to ignore */ }
   }
 
   /**
