@@ -1403,12 +1403,8 @@ const UI = (() => {
   // ──────────────────────────────────────────
 
   return {
-    /**
-     * init()
-     * Call once after sign-in. Sets initial state, renders
-     * the home page, and wires up Lucide icons.
-     */
-    init() {
+  goPage,
+  init() {
       if (!State.ui.logDate)  State.ui.logDate  = today();
       if (!State.ui.sessDate) State.ui.sessDate = today();
       if (!State.ui.sport)    State.ui.sport    = "gym";
