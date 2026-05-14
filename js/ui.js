@@ -1333,14 +1333,46 @@ const UI = (() => {
       target_weeks:     $("tgwk")?.value || null
     };
     saveProfile(fields);
-    // Flash toast
-    const toast = $("toast");
-    if (toast) {
-      toast.style.display = "block";
-      setTimeout(() => { toast.style.display = "none"; }, 2000);
-    }
-    // Refresh calorie bar with new TDEE
+    _showToast("✓ Profile saved!");
     renderCalBar();
+  }
+
+  /**
+   * _showToast(msg, durationMs)
+   * Floating pill toast — fixed at bottom of screen, always visible.
+   */
+  function _showToast(msg, durationMs = 2500) {
+    let toast = $("toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "toast";
+      document.body.appendChild(toast);
+    }
+    Object.assign(toast.style, {
+      position:      "fixed",
+      bottom:        "90px",
+      left:          "50%",
+      transform:     "translateX(-50%)",
+      background:    "#1a1a1a",
+      color:         "#fff",
+      padding:       "12px 24px",
+      borderRadius:  "24px",
+      fontSize:      "14px",
+      fontWeight:    "500",
+      zIndex:        "9999",
+      opacity:       "1",
+      transition:    "opacity 0.4s ease",
+      pointerEvents: "none",
+      whiteSpace:    "nowrap",
+      boxShadow:     "0 4px 16px rgba(0,0,0,0.25)",
+      display:       "block"
+    });
+    toast.textContent = msg;
+    if (toast._hideTimer) clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => {
+      toast.style.opacity = "0";
+      setTimeout(() => { toast.style.display = "none"; toast.style.opacity = "1"; }, 400);
+    }, durationMs);
   }
 
 
