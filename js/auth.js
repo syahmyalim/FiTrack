@@ -68,7 +68,7 @@ function onGoogleSignIn(response) {
 
   // Show the app, hide the login screen
   document.getElementById("login-screen").style.display = "none";
-  document.getElementById("main-app").classList.add("visible");
+  document.getElementById("main-app").classList.add("on");
 
   // Boot the app
   if (typeof App !== "undefined" && typeof App.onSignIn === "function") {
@@ -95,7 +95,7 @@ function signOut() {
 
   // Show login, hide app
   document.getElementById("login-screen").style.display = "";
-  document.getElementById("main-app").classList.remove("visible");
+  document.getElementById("main-app").classList.remove("on");
 
   console.log("[Auth] Signed out.");
 }
