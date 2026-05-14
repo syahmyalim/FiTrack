@@ -8,7 +8,7 @@
 // ============================================================
 
 const UI = (() => {
-
+const _storeSaveProfile = window.saveProfile;
   // ──────────────────────────────────────────
   //  INTERNAL HELPERS
   // ──────────────────────────────────────────
@@ -1332,7 +1332,7 @@ const UI = (() => {
       target_weight_kg: $("tgw")?.value  ? Number($("tgw").value)  : null,
       target_weeks:     $("tgwk")?.value || null
     };
-    window.saveProfile(fields);
+    _storeSaveProfile(fields);
 
     // Show toast first — before anything that could throw
     _showToast("\u2713 Profile saved!");
