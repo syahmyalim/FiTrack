@@ -229,7 +229,7 @@ const UI = (() => {
       let bmr = gender === "male"
         ? 10 * w + 6.25 * h - 5 * a + 5
         : 10 * w + 6.25 * h - 5 * a - 161;
-      const factor = Number(activity) || 1.2;
+      const factor = { sedentary:1.2, light:1.375, moderate:1.55, active:1.725, very_active:1.9 }[activity] || 1.2;
       return Math.round(bmr * factor);
     })();
 
@@ -1332,7 +1332,7 @@ const UI = (() => {
       target_weight_kg: $("tgw")?.value  ? Number($("tgw").value)  : null,
       target_weeks:     $("tgwk")?.value || null
     };
-    saveProfile(fields);
+    window.saveProfile(fields);
 
     // Show toast first — before anything that could throw
     _showToast("\u2713 Profile saved!");
