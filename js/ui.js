@@ -1403,8 +1403,43 @@ const UI = (() => {
   // ──────────────────────────────────────────
 
   return {
-  goPage,
-  init() {
+    goPage,
+
+    // ── Drawer ──
+    openDrawer,
+    closeDrawer,
+
+    // ── Chart overlay ──
+    openChartOverlay,
+    closeChartOverlay,
+
+    // ── Training page ──
+    swTrain,
+    chSess,
+    selSport,
+    onExDd,
+    addExCard,
+    addSet,
+    _renumSets,
+    saveGym,
+    saveCardio,
+    filtHist,
+    delSession,
+
+    // ── Log modal (food + weight) ──
+    openLogModal,
+    closeLogModal,
+    swLogTab,
+    chLogDate,
+    addFood,
+    delFood,
+    addWeight,
+
+    // ── Profile ──
+    calc,
+    doSaveProfile,
+
+    init() {
       if (!State.ui.logDate)  State.ui.logDate  = today();
       if (!State.ui.sessDate) State.ui.sessDate = today();
       if (!State.ui.sport)    State.ui.sport    = "gym";
@@ -1430,9 +1465,7 @@ const UI = (() => {
       if (id === "progress") { renderProgress(); lucide?.createIcons?.(); }
       if (id === "training") { renderTraining(); lucide?.createIcons?.(); }
       if (id === "profile")  { renderProfile();  lucide?.createIcons?.(); }
-    },
-    calc,
-    doSaveProfile
+    }
   };
 
 })();
