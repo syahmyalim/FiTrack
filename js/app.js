@@ -86,9 +86,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ── Prevent iOS double-tap zoom on buttons ──
+  // NOTE: Do NOT call e.preventDefault() here — it swallows the subsequent
+  // click event and breaks ALL button taps on mobile (FAB, drawer, etc.).
+  // iOS double-tap zoom is prevented via the meta viewport tag instead.
   document.addEventListener("touchend", e => {
-    if (e.target.tagName === "BUTTON") e.preventDefault();
-  }, { passive: false });
+    // intentionally left empty — keep listener for potential future use
+  }, { passive: true });
 
   console.log("[App] DOMContentLoaded — listeners attached.");
 });
