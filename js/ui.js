@@ -1434,7 +1434,9 @@ const UI = (() => {
       if (id === "progress") { renderProgress(); lucide?.createIcons?.(); }
       if (id === "training") { renderTraining(); lucide?.createIcons?.(); }
       if (id === "profile")  { renderProfile();  lucide?.createIcons?.(); }
-    }
+    },
+    calc,
+    doSaveProfile
   };
 
 })();
