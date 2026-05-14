@@ -1,152 +1,222 @@
 // ============================================================
-//  FitTrack — auth.js
-//  Handles Google Sign-In (OAuth).
-//  Only 2 allowed emails can get in.
-//  Calls loadState() from store.js, then kicks off the app.
+//  auth.js — FitTrack Authentication
+//  Handles Google Sign-In (OAuth), guards access to 2
+//  authorised emails only, and manages sign-out.
+//
+//  Depends on: store.js (State, loadLocal, clearLocal, resetState)
+//              config.js (CONFIG.CLIENT_ID, CONFIG.ALLOWED_EMAILS)
+//  Loaded by:  index.html  (after store.js, before sync/ui/app.js)
 // ============================================================
 
-// ── The only 2 emails allowed to use the app ─────────────────
-const ALLOWED_EMAILS = [
-  "syahmyalim@gmail.com",   // ← replace with husband's email
-  "nabila9782@gmail.com"        // ← replace with wife's email
-];
 
-// ── Google OAuth Client ID (from config.js) ──────────────────
-//    This is already set in config.js, we just reference it here
-//    via the global CONFIG object.
-//    If you don't have config.js set up yet, you can paste it directly:
-//    const CLIENT_ID = "359944522311-ccu0kc5unogbqujuuh33kqjij6eev2pu.apps.googleusercontent.com";
+// ----------------------------------------------------------
+//  1. GOOGLE IDENTITY SERVICES INITIALISATION
+//  Runs once the Google GSI library is ready.
+//  index.html must load this script:
+//    <script src="https://accounts.google.com/gsi/client" async defer></script>
+//  And call  Auth.init()  from app.js once the page is ready.
+// ----------------------------------------------------------
+const Auth = (() => {
 
-// ============================================================
-//  Called automatically by Google after their script loads.
-//  We initialise the Sign-In button here.
-// ============================================================
-function initGoogleAuth() {
-  google.accounts.id.initialize({
-    client_id: CONFIG.CLIENT_ID,   // from config.js
-    callback: handleGoogleSignIn,  // runs when the user picks an account
-    auto_select: true              // silently signs back in if session is fresh
-  });
+  // --------------------------------------------------------
+  //  Private helpers
+  // --------------------------------------------------------
 
-  // Render the Sign-In button inside <div id="g_signin_btn">
-  google.accounts.id.renderButton(
-    document.getElementById("g_signin_btn"),
-    {
-      theme: "filled_black",
-      size: "large",
-      text: "signin_with",
-      shape: "pill"
+  /**
+   * _isAllowed(email)
+   * Returns true only if the email is in CONFIG.ALLOWED_EMAILS.
+   * This is the primary security gate — nobody else can use the app.
+   */
+  function _isAllowed(email) {
+    if (!email) return false;
+    const allowed = (typeof CONFIG !== "undefined" && CONFIG.ALLOWED_EMAILS)
+      ? CONFIG.ALLOWED_EMAILS
+      : [];
+    return allowed.map(e => e.toLowerCase()).includes(email.toLowerCase());
+  }
+
+  /**
+   * _parseJwt(token)
+   * Decodes a Google ID token (JWT) without a library.
+   * Returns the payload object (contains email, name, picture, etc.)
+   */
+  function _parseJwt(token) {
+    try {
+      const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const json = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(json);
+    } catch (err) {
+      console.error("[Auth] Failed to parse JWT:", err);
+      return null;
     }
-  );
-
-  // Also show the "one tap" popup if the user has signed in before
-  google.accounts.id.prompt();
-}
-
-// ============================================================
-//  This runs after Google verifies the user.
-//  response.credential is a JWT token — we decode it to get
-//  the user's name and email without any extra server calls.
-// ============================================================
-function handleGoogleSignIn(response) {
-  // Decode the JWT (it's just base64 — no secret needed to read it)
-  const payload = parseJWT(response.credential);
-
-  const email = payload.email;
-  const name  = payload.name || email.split("@")[0];
-
-  // ── Access check ─────────────────────────────────────────
-  if (!ALLOWED_EMAILS.includes(email)) {
-    showAuthError("Sorry, this app is private. Your email is not on the list.");
-    return;
   }
 
-  // ── Store the user in State ───────────────────────────────
-  State.user = { email, name };
-  saveState();
-
-  // ── Hide the sign-in screen, show the app ────────────────
-  document.getElementById("signin_screen").style.display = "none";
-  document.getElementById("app_shell").style.display     = "block";
-
-  // ── Hand off to the app ───────────────────────────────────
-  //    app.js will call this once auth is confirmed
-  if (typeof onAuthReady === "function") {
-    onAuthReady();
+  /**
+   * _showScreen(id)
+   * Shows one top-level screen, hides all others.
+   * Screens: "screen-login" | "screen-app" | "screen-blocked"
+   */
+  function _showScreen(id) {
+    ["screen-login", "screen-app", "screen-blocked"].forEach(s => {
+      const el = document.getElementById(s);
+      if (el) el.style.display = (s === id) ? "" : "none";
+    });
   }
 
-  console.log("FitTrack: signed in as", email, "✓");
-}
+  /**
+   * _onSignInSuccess(payload)
+   * Called after a valid Google credential is received.
+   * payload = decoded JWT  { email, name, picture, ... }
+   */
+  function _onSignInSuccess(payload) {
+    const email = payload.email;
+    const name  = payload.name || email.split("@")[0];
 
-// ============================================================
-//  Sign the user out.
-//  Call this from a "Sign Out" button in the UI.
-// ============================================================
-function signOut() {
-  google.accounts.id.disableAutoSelect(); // stop auto sign-in next time
-  clearState();                           // wipe localStorage (from store.js)
-
-  // Hide app, show sign-in screen
-  document.getElementById("app_shell").style.display     = "none";
-  document.getElementById("signin_screen").style.display = "flex";
-
-  console.log("FitTrack: signed out ✓");
-}
-
-// ============================================================
-//  Check if the user is already signed in (on page load).
-//  If State has a saved user, skip the sign-in screen.
-// ============================================================
-function checkExistingSession() {
-  loadState(); // always load first (from store.js)
-
-  if (State.user && State.user.email && ALLOWED_EMAILS.includes(State.user.email)) {
-    // Already signed in — skip straight to the app
-    document.getElementById("signin_screen").style.display = "none";
-    document.getElementById("app_shell").style.display     = "block";
-
-    if (typeof onAuthReady === "function") {
-      onAuthReady();
+    if (!_isAllowed(email)) {
+      console.warn("[Auth] Blocked email:", email);
+      _showScreen("screen-blocked");
+      return;
     }
 
-    console.log("FitTrack: session restored for", State.user.email, "✓");
-  } else {
-    // Not signed in — show the sign-in screen
-    document.getElementById("signin_screen").style.display = "flex";
-    document.getElementById("app_shell").style.display     = "none";
-  }
-}
+    // Store user in State
+    State.user.email = email;
+    State.user.name  = name;
 
-// ============================================================
-//  Show an error message on the sign-in screen.
-// ============================================================
-function showAuthError(message) {
-  const el = document.getElementById("auth_error");
-  if (el) {
-    el.textContent = message;
-    el.style.display = "block";
-  } else {
-    alert(message); // fallback
-  }
-}
+    // Load this user's saved data from localStorage
+    loadLocal();
 
-// ============================================================
-//  Decode a JWT token (read-only — not for security verification).
-//  Google already verified the token; we just need the payload.
-// ============================================================
-function parseJWT(token) {
-  try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch (e) {
-    console.error("FitTrack: could not parse JWT", e);
-    return {};
-  }
-}
+    // Keep user fields fresh (name may have changed)
+    State.user.email = email;
+    State.user.name  = name;
 
-// ============================================================
-//  Kick everything off when the page loads.
-// ============================================================
-window.addEventListener("load", () => {
-  checkExistingSession();
-});
+    console.log("[Auth] Signed in as:", email);
+
+    // Hand off to app.js to boot the UI
+    if (typeof App !== "undefined" && typeof App.onSignIn === "function") {
+      App.onSignIn();
+    }
+
+    _showScreen("screen-app");
+  }
+
+  // --------------------------------------------------------
+  //  Public API
+  // --------------------------------------------------------
+
+  /**
+   * Auth.init()
+   * Initialises the Google Identity Services button renderer.
+   * Call this once from app.js when the DOM is ready.
+   *
+   * Expects a <div id="g_id_signin"></div> in index.html where
+   * the Google button will be rendered.
+   */
+  function init() {
+    if (typeof google === "undefined" || !google.accounts) {
+      // GSI library not loaded yet — retry in 200 ms
+      console.warn("[Auth] GSI not ready, retrying...");
+      setTimeout(init, 200);
+      return;
+    }
+
+    const clientId = (typeof CONFIG !== "undefined")
+      ? CONFIG.CLIENT_ID
+      : "";
+
+    // Initialise GSI
+    google.accounts.id.initialize({
+      client_id: clientId,
+      callback: _handleCredentialResponse,
+      auto_select: true,          // silently re-signs-in returning users
+      cancel_on_tap_outside: false
+    });
+
+    // Render the sign-in button inside #g_id_signin
+    const btnContainer = document.getElementById("g_id_signin");
+    if (btnContainer) {
+      google.accounts.id.renderButton(btnContainer, {
+        type: "standard",
+        shape: "pill",
+        theme: "outline",
+        text: "sign_in_with",
+        size: "large",
+        logo_alignment: "left"
+      });
+    }
+
+    // Also trigger One Tap prompt (pops up the account chooser)
+    google.accounts.id.prompt();
+
+    console.log("[Auth] GSI initialised ✓");
+  }
+
+  /**
+   * _handleCredentialResponse(response)
+   * Google calls this with a credential object after the user picks
+   * their account.  response.credential is the raw JWT string.
+   */
+  function _handleCredentialResponse(response) {
+    const payload = _parseJwt(response.credential);
+    if (!payload) {
+      console.error("[Auth] Could not parse credential.");
+      return;
+    }
+    _onSignInSuccess(payload);
+  }
+
+  /**
+   * Auth.signOut()
+   * Clears State, revokes the Google session, returns to login screen.
+   * Wire this to a "Sign Out" button in the app.
+   */
+  function signOut() {
+    const email = State.user.email;
+
+    // Reset in-memory state
+    resetState();
+
+    // Revoke Google session so the account picker shows next time
+    if (typeof google !== "undefined" && google.accounts && email) {
+      google.accounts.id.revoke(email, () => {
+        console.log("[Auth] Google session revoked for:", email);
+      });
+    }
+
+    console.log("[Auth] Signed out.");
+    _showScreen("screen-login");
+  }
+
+  /**
+   * Auth.currentUser()
+   * Convenience getter — returns { email, name } or null.
+   */
+  function currentUser() {
+    if (!State.user.email) return null;
+    return { email: State.user.email, name: State.user.name };
+  }
+
+  /**
+   * Auth.isSignedIn()
+   * Returns true if a valid user is in State.
+   */
+  function isSignedIn() {
+    return !!State.user.email && _isAllowed(State.user.email);
+  }
+
+  // Expose public methods
+  return { init, signOut, currentUser, isSignedIn };
+
+})();
+
+
+// ----------------------------------------------------------
+//  2. EXPOSE GLOBALLY
+// ----------------------------------------------------------
+window.Auth = Auth;
+
+console.log("[Auth] auth.js loaded ✓");
