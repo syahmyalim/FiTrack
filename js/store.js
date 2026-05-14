@@ -1,510 +1,569 @@
 // ============================================================
-//  FitTrack — store.js
-//  Single source of truth. Handles State, localStorage,
-//  and all data-mutation helpers.
-//  No network calls here — that's sync.js's job.
+//  store.js — FitTrack State & Local Storage
+//  Handles all data in memory and saves/loads from localStorage
+//  Other files read/write State via the helpers below.
 // ============================================================
 
-// ── Default / empty State shape ──────────────────────────────
+// ----------------------------------------------------------
+//  1. DEFAULT / BLANK STATE
+//  This is what State looks like for a brand-new user.
+// ----------------------------------------------------------
 const DEFAULT_STATE = {
-  user: { email: "", name: "" },
-
-  // keyed by "YYYY-MM-DD"
-  foodLog: {},    // { "2025-05-13": [{id, food_name, calories, logged_at, _synced}] }
-  weightLog: {},  // { "2025-05-13": {weight_kg, body_fat_pct, logged_at, _synced} }
-
-  // array of sessions (each may have an exercises array)
-  training: [],
-  /*  [{
-        id, date, sport, duration_min, distance, distance_unit,
-        laps, calories, notes,
-        exercises: [{ name, sets: [{kg, reps}] }],
-        _synced
-      }]  */
-
-  profile: {
-    age: "",
-    gender: "",
-    height_cm: "",
-    weight_kg: "",
-    activity: "",
-    body_fat_pct: "",
-    target_weight_kg: "",
-    target_weeks: "",
+  user: {
+    email: null,
+    name: null
   },
-
-  exerciseLib: [], // list of exercise name strings, persisted locally
-
-  // UI transient state — saved so the user lands back where they left off
+  profile: {
+    age: null,
+    gender: null,
+    height_cm: null,
+    weight_kg: null,
+    activity: null,         // "sedentary" | "light" | "moderate" | "active" | "very_active"
+    body_fat_pct: null,
+    target_weight_kg: null,
+    target_weeks: null
+  },
+  foodLog: {},              // { "YYYY-MM-DD": [{id, food_name, calories, logged_at, _synced}] }
+  weightLog: {},            // { "YYYY-MM-DD": {weight_kg, body_fat_pct, logged_at, _synced} }
+  training: [],             // [{id, date, sport, duration_min, distance, distance_unit,
+                            //   laps, calories, notes,
+                            //   exercises:[{name, sets:[{kg,reps}]}], _synced}]
+  exerciseLib: [],          // ["Squat","Bench Press",...] saved locally for autocomplete
   ui: {
-    wBarOff: 0,       // weight bar chart offset (weeks back)
-    stampOff: 0,      // stamp calendar offset (months back)
-    hStatOff: 0,      // home stats offset
-    logDate: "",      // active food-log date  (YYYY-MM-DD)
-    sessDate: "",     // active session date   (YYYY-MM-DD)
-    sport: "gym",     // active sport tab
-    gymCards: [],     // open exercise card indices
-    histFilter: "all" // training history filter
+    logDate: null,          // date string currently shown in food-log tab ("YYYY-MM-DD")
+    sessDate: null,         // date string currently shown in training tab
+    sport: null,            // sport type selected in training form
+    gymCards: [],           // gym exercise cards open in session form
+    histFilter: "all",      // session history filter
+    wBarOff: 0,             // weekly calorie bar chart offset
+    stampOff: 0,            // training stamp calendar offset
+    hStatOff: 0             // home stats week offset
   }
 };
 
-// ── Live State object (populated from localStorage on init) ──
-let State = {};
+// ----------------------------------------------------------
+//  2. LIVE STATE OBJECT
+//  This is what every other file uses. Never replace it —
+//  always mutate its properties instead.
+// ----------------------------------------------------------
+let State = JSON.parse(JSON.stringify(DEFAULT_STATE));   // deep clone
 
-// ── localStorage key ─────────────────────────────────────────
-const STORE_KEY = "fittrack_state";
 
-// ============================================================
-//  Core persistence helpers
-// ============================================================
-
-/** Load State from localStorage (or start fresh). */
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      // Deep-merge with DEFAULT_STATE so new keys added later still appear
-      State = deepMerge(DEFAULT_STATE, parsed);
-    } else {
-      State = deepClone(DEFAULT_STATE);
-    }
-  } catch (err) {
-    console.warn("FitTrack: could not parse saved state, starting fresh.", err);
-    State = deepClone(DEFAULT_STATE);
-  }
-
-  // Always make sure today is set as the default log date if not already set
-  const today = todayStr();
-  if (!State.ui.logDate)  State.ui.logDate  = today;
-  if (!State.ui.sessDate) State.ui.sessDate = today;
-
-  console.log("FitTrack: State loaded ✓");
-}
-
-/** Persist the entire State to localStorage. */
-function saveState() {
-  try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(State));
-  } catch (err) {
-    console.error("FitTrack: failed to save state.", err);
-  }
-}
-
-/** Wipe localStorage and reset to defaults (used on sign-out). */
-function clearState() {
-  localStorage.removeItem(STORE_KEY);
-  State = deepClone(DEFAULT_STATE);
-}
-
-// ============================================================
-//  Food Log helpers
-// ============================================================
+// ----------------------------------------------------------
+//  3. LOCAL STORAGE HELPERS
+// ----------------------------------------------------------
 
 /**
- * Add a food entry for a given date.
- * @param {string} date       "YYYY-MM-DD"
- * @param {string} food_name
- * @param {number} calories
- * @returns {object} the new entry
+ * Key used in localStorage.
+ * Each Google account gets its own key so 2 users on
+ * the same device don't overwrite each other.
  */
-function addFoodEntry(date, food_name, calories) {
+function _storageKey() {
+  const email = State.user?.email || "guest";
+  return "fittrack_" + email;
+}
+
+/**
+ * saveLocal()
+ * Writes the whole State to localStorage as JSON.
+ * Call this after any change you want to survive a page refresh.
+ */
+function saveLocal() {
+  try {
+    const key = _storageKey();
+    localStorage.setItem(key, JSON.stringify(State));
+    console.log("[Store] Saved to localStorage:", key);
+  } catch (err) {
+    console.error("[Store] Could not save to localStorage:", err);
+  }
+}
+
+/**
+ * loadLocal()
+ * Reads saved State for the current user from localStorage.
+ * Returns true if data was found, false if starting fresh.
+ */
+function loadLocal() {
+  try {
+    const key = _storageKey();
+    const raw = localStorage.getItem(key);
+    if (!raw) {
+      console.log("[Store] No local data found for", key);
+      return false;
+    }
+    const saved = JSON.parse(raw);
+
+    // Merge saved data into State (keeps any new keys from DEFAULT_STATE)
+    _deepMerge(State, saved);
+    console.log("[Store] Loaded from localStorage:", key);
+    return true;
+  } catch (err) {
+    console.error("[Store] Could not load from localStorage:", err);
+    return false;
+  }
+}
+
+/**
+ * clearLocal()
+ * Wipes localStorage for the current user. Used on sign-out.
+ */
+function clearLocal() {
+  try {
+    const key = _storageKey();
+    localStorage.removeItem(key);
+    console.log("[Store] Cleared localStorage:", key);
+  } catch (err) {
+    console.error("[Store] Could not clear localStorage:", err);
+  }
+}
+
+/**
+ * resetState()
+ * Resets in-memory State to blank defaults (does NOT touch localStorage).
+ * Used when signing out so stale data isn't shown.
+ */
+function resetState() {
+  const blank = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  _deepMerge(State, blank, /*overwriteAll=*/ true);
+  console.log("[Store] State reset to defaults.");
+}
+
+
+// ----------------------------------------------------------
+//  4. FOOD LOG HELPERS
+// ----------------------------------------------------------
+
+/**
+ * getFoodLog(date)  →  array of food entries for that date
+ * date: "YYYY-MM-DD" string.  Returns [] if nothing logged.
+ */
+function getFoodLog(date) {
+  return State.foodLog[date] || [];
+}
+
+/**
+ * addFoodEntry(date, entry)
+ * entry = { id, food_name, calories }
+ * Adds a _synced:false flag and a logged_at timestamp.
+ */
+function addFoodEntry(date, entry) {
   if (!State.foodLog[date]) State.foodLog[date] = [];
+  const item = {
+    id: entry.id || _makeId(),
+    food_name: entry.food_name,
+    calories: Number(entry.calories),
+    logged_at: entry.logged_at || new Date().toISOString(),
+    _synced: false
+  };
+  State.foodLog[date].push(item);
+  saveLocal();
+  return item;
+}
 
-  const entry = {
-    id: genId(),
-    food_name: food_name.trim(),
-    calories: Number(calories),
+/**
+ * deleteFoodEntry(date, id)
+ * Removes one food entry by id. Returns true if found.
+ */
+function deleteFoodEntry(date, id) {
+  if (!State.foodLog[date]) return false;
+  const before = State.foodLog[date].length;
+  State.foodLog[date] = State.foodLog[date].filter(e => e.id !== id);
+  const removed = State.foodLog[date].length < before;
+  if (removed) saveLocal();
+  return removed;
+}
+
+/**
+ * totalCalories(date)  →  number
+ * Sum of all calories logged on a given date.
+ */
+function totalCalories(date) {
+  return getFoodLog(date).reduce((sum, e) => sum + (Number(e.calories) || 0), 0);
+}
+
+
+// ----------------------------------------------------------
+//  5. WEIGHT LOG HELPERS
+// ----------------------------------------------------------
+
+/**
+ * getWeightEntry(date)  →  object or null
+ */
+function getWeightEntry(date) {
+  return State.weightLog[date] || null;
+}
+
+/**
+ * setWeightEntry(date, weight_kg, body_fat_pct)
+ * One entry per day — overwrites if date already exists.
+ */
+function setWeightEntry(date, weight_kg, body_fat_pct) {
+  State.weightLog[date] = {
+    weight_kg: weight_kg !== undefined ? Number(weight_kg) : null,
+    body_fat_pct: body_fat_pct !== undefined ? Number(body_fat_pct) : null,
     logged_at: new Date().toISOString(),
     _synced: false
   };
-
-  State.foodLog[date].push(entry);
-  saveState();
-  return entry;
+  saveLocal();
+  return State.weightLog[date];
 }
 
 /**
- * Delete a food entry by id (searches all dates).
- * @param {string} id
- * @returns {boolean} true if found and removed
+ * latestWeight()  →  { date, weight_kg, body_fat_pct } or null
+ * Finds the most recent weight entry across all dates.
  */
-function deleteFoodEntry(id) {
-  for (const date of Object.keys(State.foodLog)) {
-    const idx = State.foodLog[date].findIndex(e => e.id === id);
-    if (idx !== -1) {
-      State.foodLog[date].splice(idx, 1);
-      saveState();
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Return total calories logged on a given date.
- * @param {string} date "YYYY-MM-DD"
- */
-function caloriesOnDate(date) {
-  const entries = State.foodLog[date] || [];
-  return entries.reduce((sum, e) => sum + (e.calories || 0), 0);
-}
-
-// ============================================================
-//  Weight Log helpers
-// ============================================================
-
-/**
- * Save (upsert) a weight entry for a date.
- * @param {string} date        "YYYY-MM-DD"
- * @param {number} weight_kg
- * @param {number|string} body_fat_pct  (optional, pass "" to skip)
- * @returns {object} the saved entry
- */
-function saveWeightEntry(date, weight_kg, body_fat_pct = "") {
-  const entry = {
-    weight_kg: Number(weight_kg),
-    body_fat_pct: body_fat_pct !== "" ? Number(body_fat_pct) : "",
-    logged_at: new Date().toISOString(),
-    _synced: false
-  };
-
-  State.weightLog[date] = entry;
-  saveState();
-  return entry;
-}
-
-/**
- * Return the most recent weight entry (any date).
- * @returns {object|null}
- */
-function latestWeightEntry() {
-  const dates = Object.keys(State.weightLog).sort();
+function latestWeight() {
+  const dates = Object.keys(State.weightLog).sort().reverse();
   if (!dates.length) return null;
-  return { date: dates[dates.length - 1], ...State.weightLog[dates[dates.length - 1]] };
+  const date = dates[0];
+  return { date, ...State.weightLog[date] };
 }
 
-// ============================================================
-//  Training Log helpers
-// ============================================================
+
+// ----------------------------------------------------------
+//  6. TRAINING LOG HELPERS
+// ----------------------------------------------------------
 
 /**
- * Add a new training session.
- * @param {object} session  — partial object; id and _synced are set here
- * @returns {object} the full session
+ * getSessions(filter)
+ * filter = "all" | sport name (e.g. "run", "gym")
+ * Returns sessions sorted newest-first.
+ */
+function getSessions(filter) {
+  let sessions = [...State.training].sort((a, b) =>
+    (b.date || "").localeCompare(a.date || "")
+  );
+  if (filter && filter !== "all") {
+    sessions = sessions.filter(s => s.sport === filter);
+  }
+  return sessions;
+}
+
+/**
+ * getSession(id)  →  session object or null
+ */
+function getSession(id) {
+  return State.training.find(s => s.id === id) || null;
+}
+
+/**
+ * addSession(session)
+ * session = { date, sport, duration_min, distance, distance_unit,
+ *             laps, calories, notes, exercises }
+ * Returns the saved session with id and _synced:false added.
  */
 function addSession(session) {
-  const full = {
-    id: genId(),
-    date: session.date || State.ui.sessDate || todayStr(),
-    sport: session.sport || "gym",
-    duration_min: session.duration_min || "",
-    distance: session.distance || "",
-    distance_unit: session.distance_unit || "km",
-    laps: session.laps || "",
-    calories: session.calories || "",
+  const item = {
+    id: session.id || _makeId(),
+    date: session.date,
+    sport: session.sport,
+    duration_min: Number(session.duration_min) || 0,
+    distance: session.distance ? Number(session.distance) : null,
+    distance_unit: session.distance_unit || null,
+    laps: session.laps ? Number(session.laps) : null,
+    calories: session.calories ? Number(session.calories) : null,
     notes: session.notes || "",
-    exercises: session.exercises || [],   // [{name, sets:[{kg,reps}]}]
+    exercises: session.exercises || [],
+    logged_at: new Date().toISOString(),
     _synced: false
   };
+  State.training.push(item);
 
-  State.training.push(full);
-  saveState();
-  return full;
+  // Learn exercise names for autocomplete
+  if (item.exercises && item.exercises.length) {
+    item.exercises.forEach(ex => {
+      if (ex.name && !State.exerciseLib.includes(ex.name)) {
+        State.exerciseLib.push(ex.name);
+      }
+    });
+  }
+
+  saveLocal();
+  return item;
 }
 
 /**
- * Delete a training session by id.
- * @param {string} id
- * @returns {boolean}
+ * deleteSession(id)
+ * Removes a session by id. Returns true if found.
  */
 function deleteSession(id) {
-  const idx = State.training.findIndex(s => s.id === id);
-  if (idx === -1) return false;
-  State.training.splice(idx, 1);
-  saveState();
-  return true;
+  const before = State.training.length;
+  State.training = State.training.filter(s => s.id !== id);
+  const removed = State.training.length < before;
+  if (removed) saveLocal();
+  return removed;
 }
 
 /**
- * Update a training session (pass only changed fields).
- * @param {string} id
- * @param {object} updates
+ * weekSessions(dateStr)
+ * Returns all sessions in the same Mon–Sun week as dateStr.
  */
-function updateSession(id, updates) {
-  const session = State.training.find(s => s.id === id);
-  if (!session) return false;
-  Object.assign(session, updates, { _synced: false });
-  saveState();
-  return session;
+function weekSessions(dateStr) {
+  const { start, end } = _weekRange(dateStr);
+  return State.training.filter(s => s.date >= start && s.date <= end);
 }
 
-/**
- * Return sessions for a given date (sorted earliest first).
- * @param {string} date "YYYY-MM-DD"
- */
-function sessionsOnDate(date) {
-  return State.training
-    .filter(s => s.date === date)
-    .sort((a, b) => a.id.localeCompare(b.id));
-}
+
+// ----------------------------------------------------------
+//  7. PROFILE HELPERS
+// ----------------------------------------------------------
 
 /**
- * Return sessions in a date range [fromDate, toDate] inclusive.
- * @param {string} fromDate "YYYY-MM-DD"
- * @param {string} toDate   "YYYY-MM-DD"
- */
-function sessionsInRange(fromDate, toDate) {
-  return State.training.filter(s => s.date >= fromDate && s.date <= toDate);
-}
-
-// ============================================================
-//  Profile helpers
-// ============================================================
-
-/**
- * Save (merge) profile fields.
- * @param {object} fields  — any subset of the profile keys
+ * saveProfile(fields)
+ * Merges updated fields into State.profile.
+ * Also updates State.profile._synced = false.
  */
 function saveProfile(fields) {
   Object.assign(State.profile, fields);
   State.profile._synced = false;
-  saveState();
-}
-
-// ============================================================
-//  Exercise Library helpers
-// ============================================================
-
-/**
- * Add an exercise name to the local library (no duplicates, case-insensitive).
- * @param {string} name
- */
-function addExercise(name) {
-  const trimmed = name.trim();
-  const exists = State.exerciseLib.some(
-    e => e.toLowerCase() === trimmed.toLowerCase()
-  );
-  if (!exists) {
-    State.exerciseLib.push(trimmed);
-    State.exerciseLib.sort((a, b) => a.localeCompare(b));
-    saveState();
-  }
-}
-
-// ============================================================
-//  UI state helpers
-// ============================================================
-
-/**
- * Update one or more ui fields.
- * @param {object} fields
- */
-function setUI(fields) {
-  Object.assign(State.ui, fields);
-  saveState();
-}
-
-// ============================================================
-//  Sync flag helpers  (used by sync.js after push succeeds)
-// ============================================================
-
-/** Mark a food entry as synced. */
-function markFoodSynced(date, id) {
-  const entries = State.foodLog[date] || [];
-  const entry = entries.find(e => e.id === id);
-  if (entry) { entry._synced = true; saveState(); }
-}
-
-/** Mark a weight entry as synced. */
-function markWeightSynced(date) {
-  if (State.weightLog[date]) {
-    State.weightLog[date]._synced = true;
-    saveState();
-  }
-}
-
-/** Mark a training session as synced. */
-function markSessionSynced(id) {
-  const session = State.training.find(s => s.id === id);
-  if (session) { session._synced = true; saveState(); }
-}
-
-/** Mark profile as synced. */
-function markProfileSynced() {
-  State.profile._synced = true;
-  saveState();
-}
-
-// ============================================================
-//  Replace entire State after a full load_all from the server
-//  (called by sync.js after a successful cloud sync)
-// ============================================================
-
-/**
- * Merge server data into local State.
- * Server data wins for _synced records; local unsynced records are kept.
- * @param {object} serverData  { profile, foodLog, weightLog, training }
- */
-function mergeServerData(serverData) {
-  // Profile — server wins
-  if (serverData.profile) {
-    State.profile = { ...serverData.profile, _synced: true };
-  }
-
-  // Weight log — server wins per date, keep local unsync'd dates
-  if (serverData.weightLog) {
-    for (const [date, entry] of Object.entries(serverData.weightLog)) {
-      // Only overwrite if local entry is already synced (or missing)
-      if (!State.weightLog[date] || State.weightLog[date]._synced) {
-        State.weightLog[date] = { ...entry, _synced: true };
-      }
-    }
-  }
-
-  // Food log — merge by id within each date
-  if (serverData.foodLog) {
-    for (const [date, serverEntries] of Object.entries(serverData.foodLog)) {
-      if (!State.foodLog[date]) State.foodLog[date] = [];
-      const localIds = new Set(State.foodLog[date].map(e => e.id));
-      for (const se of serverEntries) {
-        if (!localIds.has(se.id)) {
-          State.foodLog[date].push({ ...se, _synced: true });
-        }
-      }
-    }
-  }
-
-  // Training — merge by id
-  if (serverData.training) {
-    const localIds = new Set(State.training.map(s => s.id));
-    for (const ss of serverData.training) {
-      if (!localIds.has(ss.id)) {
-        State.training.push({ ...ss, _synced: true });
-      }
-    }
-  }
-
-  saveState();
-}
-
-// ============================================================
-//  Computed / derived helpers  (used by ui.js)
-// ============================================================
-
-/**
- * Get an ISO week number for a date string.
- * @param {string} dateStr "YYYY-MM-DD"
- * @returns {number}
- */
-function isoWeek(dateStr) {
-  const d = new Date(dateStr + "T00:00:00");
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-  const yearStart = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  saveLocal();
 }
 
 /**
- * Return "YYYY-MM-DD" for today.
+ * calcBMR()  →  number (kcal/day) using Mifflin-St Jeor
+ * Returns null if profile is incomplete.
  */
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+function calcBMR() {
+  const { age, gender, height_cm, weight_kg } = State.profile;
+  if (!age || !gender || !height_cm || !weight_kg) return null;
+  const h = Number(height_cm), w = Number(weight_kg), a = Number(age);
+  if (gender === "male") return Math.round(10 * w + 6.25 * h - 5 * a + 5);
+  return Math.round(10 * w + 6.25 * h - 5 * a - 161);
 }
 
 /**
- * Return "YYYY-MM-DD" for N days ago (negative = future).
- * @param {number} n
+ * calcTDEE()  →  number (kcal/day)
+ * BMR × activity multiplier.  Returns null if incomplete.
  */
-function daysAgo(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-}
-
-/**
- * Return last 7 dates ending today (oldest first).
- */
-function last7Days() {
-  return Array.from({ length: 7 }, (_, i) => daysAgo(6 - i));
-}
-
-/**
- * Calculate BMR using Mifflin-St Jeor equation.
- * @param {object} profile
- * @returns {number|null}
- */
-function calcBMR(profile) {
-  const { weight_kg, height_cm, age, gender } = profile;
-  if (!weight_kg || !height_cm || !age || !gender) return null;
-  const base = 10 * Number(weight_kg) + 6.25 * Number(height_cm) - 5 * Number(age);
-  return gender === "male" ? base + 5 : base - 161;
-}
-
-/** Activity multipliers for TDEE. */
-const ACTIVITY_MULTIPLIERS = {
-  sedentary: 1.2,
-  light: 1.375,
-  moderate: 1.55,
-  active: 1.725,
-  very_active: 1.9
-};
-
-/**
- * Calculate TDEE.
- * @param {object} profile
- * @returns {number|null}
- */
-function calcTDEE(profile) {
-  const bmr = calcBMR(profile);
+function calcTDEE() {
+  const bmr = calcBMR();
   if (!bmr) return null;
-  const mult = ACTIVITY_MULTIPLIERS[profile.activity] || 1.2;
-  return Math.round(bmr * mult);
+  const multipliers = {
+    sedentary: 1.2,
+    light: 1.375,
+    moderate: 1.55,
+    active: 1.725,
+    very_active: 1.9
+  };
+  const factor = multipliers[State.profile.activity] || 1.2;
+  return Math.round(bmr * factor);
 }
 
 /**
- * Calculate BMI.
- * @param {object} profile
- * @returns {number|null}
+ * calcBMI()  →  number rounded to 1 decimal, or null
  */
-function calcBMI(profile) {
-  const { weight_kg, height_cm } = profile;
-  if (!weight_kg || !height_cm) return null;
-  return (Number(weight_kg) / Math.pow(Number(height_cm) / 100, 2)).toFixed(1);
+function calcBMI() {
+  const { height_cm, weight_kg } = State.profile;
+  if (!height_cm || !weight_kg) return null;
+  const h = Number(height_cm) / 100;
+  return Math.round((Number(weight_kg) / (h * h)) * 10) / 10;
 }
 
-// ============================================================
-//  Private utilities
-// ============================================================
 
-/** Generate a short unique ID (timestamp + random). */
-function genId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-}
-
-/** Deep clone a plain object. */
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
+// ----------------------------------------------------------
+//  8. UNSYNCED DATA QUERY
+//  sync.js uses these to know what needs pushing to Sheets.
+// ----------------------------------------------------------
 
 /**
- * Recursively merge src into dst (dst wins on primitives, recurse on objects).
- * Arrays from src REPLACE arrays in dst.
+ * unsyncedFoods()  →  array of {date, ...entry} not yet synced
  */
-function deepMerge(dst, src) {
-  const out = { ...dst };
-  for (const key of Object.keys(src)) {
-    if (
-      src[key] !== null &&
-      typeof src[key] === "object" &&
-      !Array.isArray(src[key]) &&
-      typeof dst[key] === "object" &&
-      !Array.isArray(dst[key])
-    ) {
-      out[key] = deepMerge(dst[key] || {}, src[key]);
-    } else {
-      out[key] = src[key];
+function unsyncedFoods() {
+  const out = [];
+  for (const [date, entries] of Object.entries(State.foodLog)) {
+    for (const e of entries) {
+      if (!e._synced) out.push({ date, ...e });
     }
   }
   return out;
 }
+
+/**
+ * unsyncedWeights()  →  array of {date, ...entry} not yet synced
+ */
+function unsyncedWeights() {
+  const out = [];
+  for (const [date, entry] of Object.entries(State.weightLog)) {
+    if (!entry._synced) out.push({ date, ...entry });
+  }
+  return out;
+}
+
+/**
+ * unsyncedSessions()  →  array of sessions not yet synced
+ */
+function unsyncedSessions() {
+  return State.training.filter(s => !s._synced);
+}
+
+/**
+ * markSynced(type, ids)
+ * type = "food" | "weight" | "session"
+ * ids  = array of id strings (for food/session)
+ *        or array of date strings (for weight)
+ */
+function markSynced(type, ids) {
+  const set = new Set(ids);
+  if (type === "food") {
+    for (const entries of Object.values(State.foodLog)) {
+      for (const e of entries) {
+        if (set.has(e.id)) e._synced = true;
+      }
+    }
+  } else if (type === "weight") {
+    for (const date of set) {
+      if (State.weightLog[date]) State.weightLog[date]._synced = true;
+    }
+  } else if (type === "session") {
+    for (const s of State.training) {
+      if (set.has(s.id)) s._synced = true;
+    }
+  }
+  saveLocal();
+}
+
+
+// ----------------------------------------------------------
+//  9. DATE UTILITIES
+// ----------------------------------------------------------
+
+/**
+ * today()  →  "YYYY-MM-DD" in local time
+ */
+function today() {
+  return _toDateStr(new Date());
+}
+
+/**
+ * _toDateStr(date)  →  "YYYY-MM-DD"
+ */
+function _toDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * _weekRange(dateStr)  →  { start: "YYYY-MM-DD", end: "YYYY-MM-DD" }
+ * Monday–Sunday week containing dateStr.
+ */
+function _weekRange(dateStr) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();                       // 0=Sun,1=Mon,...
+  const diffToMon = (day === 0) ? -6 : 1 - day;
+  const mon = new Date(d);
+  mon.setDate(d.getDate() + diffToMon);
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  return { start: _toDateStr(mon), end: _toDateStr(sun) };
+}
+
+/**
+ * weekDates(dateStr)  →  array of 7 "YYYY-MM-DD" strings (Mon→Sun)
+ */
+function weekDates(dateStr) {
+  const { start } = _weekRange(dateStr);
+  const base = new Date(start + "T00:00:00");
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    return _toDateStr(d);
+  });
+}
+
+/**
+ * last30Days()  →  array of 30 "YYYY-MM-DD" strings ending today
+ */
+function last30Days() {
+  const base = new Date();
+  return Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() - (29 - i));
+    return _toDateStr(d);
+  });
+}
+
+
+// ----------------------------------------------------------
+//  10. MISC INTERNALS
+// ----------------------------------------------------------
+
+/**
+ * _makeId()  →  short unique-ish string  (e.g. "ft_k7x2p")
+ */
+function _makeId() {
+  return "ft_" + Math.random().toString(36).slice(2, 7);
+}
+
+/**
+ * _deepMerge(target, source, overwriteAll)
+ * Recursively copies source keys onto target.
+ * If overwriteAll is true, replaces even non-object values.
+ */
+function _deepMerge(target, source, overwriteAll = false) {
+  for (const key of Object.keys(source)) {
+    if (
+      source[key] !== null &&
+      typeof source[key] === "object" &&
+      !Array.isArray(source[key]) &&
+      typeof target[key] === "object" &&
+      target[key] !== null &&
+      !Array.isArray(target[key])
+    ) {
+      _deepMerge(target[key], source[key], overwriteAll);
+    } else {
+      target[key] = source[key];
+    }
+  }
+}
+
+
+// ----------------------------------------------------------
+//  EXPOSE ON WINDOW so other scripts can use these
+// ----------------------------------------------------------
+Object.assign(window, {
+  // Core state
+  State,
+  saveLocal,
+  loadLocal,
+  clearLocal,
+  resetState,
+
+  // Food
+  getFoodLog,
+  addFoodEntry,
+  deleteFoodEntry,
+  totalCalories,
+
+  // Weight
+  getWeightEntry,
+  setWeightEntry,
+  latestWeight,
+
+  // Training
+  getSessions,
+  getSession,
+  addSession,
+  deleteSession,
+  weekSessions,
+
+  // Profile
+  saveProfile,
+  calcBMR,
+  calcTDEE,
+  calcBMI,
+
+  // Sync support
+  unsyncedFoods,
+  unsyncedWeights,
+  unsyncedSessions,
+  markSynced,
+
+  // Date utils
+  today,
+  weekDates,
+  last30Days
+});
+
+console.log("[Store] store.js loaded ✓");
