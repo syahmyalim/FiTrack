@@ -1474,33 +1474,4 @@ function addWeight()           { UI.addWeight(); }
 function calc()                { UI.calc(); }
 function saveProfile()         { UI.doSaveProfile(); }
 
-// Make UI methods accessible directly
-Object.assign(UI, {
-  openDrawer:        function() { document.getElementById("drawer")?.classList.add("on"); document.getElementById("drawer-overlay")?.classList.add("on"); updateSyncBadge?.(); },
-  closeDrawer:       function() { document.getElementById("drawer")?.classList.remove("on"); document.getElementById("drawer-overlay")?.classList.remove("on"); },
-  goPage,
-  openChartOverlay,
-  closeChartOverlay,
-  swTrain,
-  chSess,
-  selSport,
-  onExDd,
-  addExCard,
-  addSet,
-  _renumSets,
-  saveGym,
-  saveCardio,
-  filtHist,
-  delSession,
-  openLogModal,
-  closeLogModal,
-  swLogTab,
-  chLogDate,
-  addFood,
-  delFood,
-  addWeight,
-  calc,
-  doSaveProfile
-});
-
 console.log("[UI] ui.js loaded ✓");
