@@ -9,7 +9,7 @@
 // Allowed emails — add both husband and wife here
 const ALLOWED_EMAILS = [
   "syahmyalim@gmail.com",   // ← replace with real emails
-  "wife@gmail.com"           // ← replace with real email
+  "nabila9782@gmail.com"           // ← replace with real email
 ];
 
 // ----------------------------------------------------------
